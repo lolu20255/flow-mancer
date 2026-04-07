@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Outfit', sans-serif;
+  --color-forge-950: #08080a;
+  --color-forge-900: #0f0f13;
+  --color-forge-850: #141419;
+  --color-forge-800: #1a1a22;
+  --color-forge-700: #24242f;
+  --color-forge-600: #33334a;
+  --color-forge-500: #4a4a6a;
+  --color-forge-400: #6b6b8a;
+  --color-forge-300: #9090a8;
+  --color-forge-200: #b8b8cc;
+  --color-forge-100: #e0e0ea;
+  --color-forge-50: #f2f2f6;
+  --color-ember: #f97316;
+  --color-ember-glow: #fb923c;
+}
+
+/* ── Light / Pastel theme overrides ── */
+:root[data-theme="light"] {
+  --color-forge-950: #f7f5f0;
+  --color-forge-900: #ffffff;
+  --color-forge-850: #faf8f4;
+  --color-forge-800: #ece8df;
+  --color-forge-700: #dbd5c9;
+  --color-forge-600: #b8b0a0;
+  --color-forge-500: #948c7e;
+  --color-forge-400: #706a5e;
+  --color-forge-300: #504b42;
+  --color-forge-200: #36322c;
+  --color-forge-100: #1e1c18;
+  --color-forge-50: #0f0e0c;
+  --color-ember: #e05d00;
+  --color-ember-glow: #c44e00;
+}
+
+[data-theme="light"] body::before {
+  opacity: 0.012;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: var(--color-forge-700);
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-forge-600);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-forge-950);
+  color: var(--color-forge-100);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  height: 100dvh;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* Smooth theme transitions on all themed elements */
+[data-theme] *:not([draggable="true"]) {
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease, box-shadow 0.35s ease;
+}
+
+#app {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* Noise grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-forge-600);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-forge-500);
+}
+
+/* Drag states */
+.drag-ghost {
+  opacity: 0.4;
+  transform: rotate(2deg);
+}
+
+/* Fade-in animation */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out both;
+}
