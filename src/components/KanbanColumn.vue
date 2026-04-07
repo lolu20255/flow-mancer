@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useBoardStore, COLUMN_COLORS } from '../stores/board.js'
+import { useProjectStore } from '../stores/projects.js'
 import KanbanCard from './KanbanCard.vue'
 import CardModal from './CardModal.vue'
 
@@ -14,6 +15,7 @@ const props = defineProps({
 const emit = defineEmits(['card-drag-start', 'card-drop', 'card-drag-end'])
 
 const store = useBoardStore()
+const projectStore = useProjectStore()
 
 // Inline editing column name
 const isEditingName = ref(false)
@@ -56,25 +58,39 @@ function setColor(color) {
 // Add card
 const showAddCard = ref(false)
 const newCardTitle = ref('')
+const newCardProjectId = ref(null)
+const showProjectPicker = ref(false)
 const addCardInput = ref(null)
 
 function openAddCard() {
   showAddCard.value = true
   newCardTitle.value = ''
+  newCardProjectId.value = null
+  showProjectPicker.value = false
   setTimeout(() => addCardInput.value?.focus(), 30)
 }
 
-function addCard() {
+async function addCard() {
   if (!newCardTitle.value.trim()) return
-  store.addCard(props.boardId, props.column.id, newCardTitle.value.trim())
+  const card = await store.addCard(props.boardId, props.column.id, newCardTitle.value.trim())
+  if (card && newCardProjectId.value) {
+    await store.updateCard(props.boardId, props.column.id, card.id, { projectId: newCardProjectId.value })
+  }
   newCardTitle.value = ''
+  newCardProjectId.value = null
   addCardInput.value?.focus()
 }
 
 function cancelAddCard() {
   showAddCard.value = false
   newCardTitle.value = ''
+  newCardProjectId.value = null
+  showProjectPicker.value = false
 }
+
+const selectedProject = computed(() =>
+  newCardProjectId.value ? projectStore.getProject(newCardProjectId.value) : null
+)
 
 // Card editing modal
 const editingCard = ref(null)
@@ -232,17 +248,74 @@ const accentBorder = computed(() => `${props.column.color}30`)
       ></div>
 
       <!-- Add card inline -->
-      <div v-if="showAddCard" class="animate-fade-in">
+      <div v-if="showAddCard" class="animate-fade-in" @mousedown.stop>
         <textarea
           ref="addCardInput"
           v-model="newCardTitle"
           @keydown.enter.prevent="addCard"
           @keydown.escape="cancelAddCard"
-          @blur="cancelAddCard"
           placeholder="Card title..."
           rows="2"
           class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-3 py-2 text-sm text-forge-100 placeholder-forge-500 resize-none focus:outline-none focus:border-ember/40"
         ></textarea>
+
+        <!-- Quick project assign -->
+        <div v-if="projectStore.projects.length" class="flex items-center gap-1.5 mt-1.5">
+          <div class="relative">
+          <button
+            @click="showProjectPicker = !showProjectPicker"
+            class="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] transition-colors cursor-pointer"
+            :class="selectedProject
+              ? 'bg-forge-800 text-forge-200 border border-forge-700/40'
+              : 'text-forge-500 hover:text-forge-300 hover:bg-forge-800/50'"
+          >
+            <template v-if="selectedProject">
+              <div class="w-2 h-2 rounded-full" :style="{ backgroundColor: selectedProject.color }"></div>
+              <span>{{ selectedProject.emoji }} {{ selectedProject.name }}</span>
+              <svg
+                class="w-3 h-3 text-forge-500 hover:text-forge-300 ml-0.5"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                @click.stop="newCardProjectId = null"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </template>
+            <template v-else>
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              Project
+            </template>
+          </button>
+
+          <!-- Dropdown -->
+          <div
+            v-if="showProjectPicker"
+            class="absolute bottom-full left-0 mb-1 z-20 w-44 bg-forge-800 border border-forge-700/50 rounded-lg shadow-xl shadow-black/30 overflow-hidden animate-scale-in"
+          >
+            <button
+              v-for="project in projectStore.projects"
+              :key="project.id"
+              @click="newCardProjectId = project.id; showProjectPicker = false"
+              class="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-forge-700/50 transition-colors cursor-pointer"
+              :class="newCardProjectId === project.id ? 'bg-forge-700/30' : ''"
+            >
+              <div class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: project.color }"></div>
+              <span class="text-xs">{{ project.emoji }}</span>
+              <span class="text-xs text-forge-200 truncate">{{ project.name }}</span>
+            </button>
+          </div>
+          </div>
+
+          <!-- Create button -->
+          <button
+            @click="addCard"
+            :disabled="!newCardTitle.trim()"
+            class="px-2.5 py-1 rounded-md bg-ember hover:bg-ember-glow disabled:opacity-30 disabled:cursor-not-allowed text-white text-[11px] font-medium transition-all cursor-pointer shrink-0"
+          >
+            Create
+          </button>
+        </div>
       </div>
     </div>
 
