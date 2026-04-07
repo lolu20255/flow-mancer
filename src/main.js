@@ -22,18 +22,24 @@ const app = createApp(App)
 app.use(pinia)
 app.use(router)
 
-// Wait for auth to resolve before mounting
 const authStore = useAuthStore()
-authStore.init().then(() => {
-  // Route guard
-  router.beforeEach((to) => {
-    if (to.meta.auth && !authStore.isAuthenticated) {
-      return { name: 'login' }
-    }
-    if (to.meta.guest && authStore.isAuthenticated) {
-      return { name: 'dashboard' }
-    }
-  })
 
+// Register guard BEFORE init so it catches the first navigation
+router.beforeEach(async (to) => {
+  // Wait for auth to resolve on first load
+  if (authStore.loading) {
+    await authStore.init()
+  }
+
+  if (to.meta.auth && !authStore.isAuthenticated) {
+    return { name: 'login' }
+  }
+  if (to.meta.guest && authStore.isAuthenticated) {
+    return { name: 'dashboard' }
+  }
+})
+
+// Init auth then mount
+authStore.init().then(() => {
   app.mount('#app')
 })
