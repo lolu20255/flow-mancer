@@ -88,7 +88,7 @@ function closeProjectModal() {
             <rect x="21" y="8" width="5" height="14" rx="1.5" fill="white" opacity="0.9"/>
           </svg>
           <h1 class="font-display text-2xl font-medium text-forge-50 tracking-tight">
-            Vibe Board
+            Flowmancer
           </h1>
         </div>
         <div class="flex items-center gap-3">

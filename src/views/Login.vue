@@ -72,7 +72,7 @@ function toggleMode() {
             <rect x="13.5" y="8" width="5" height="11" rx="1.5" fill="white" opacity="0.9"/>
             <rect x="21" y="8" width="5" height="14" rx="1.5" fill="white" opacity="0.9"/>
           </svg>
-          <span class="font-display text-3xl font-medium text-forge-50">Vibe Board</span>
+          <span class="font-display text-3xl font-medium text-forge-50">Flowmancer</span>
         </div>
 
         <h2 class="font-display text-4xl font-medium text-forge-50 leading-tight mb-4">
@@ -102,7 +102,7 @@ function toggleMode() {
             <rect x="13.5" y="8" width="5" height="11" rx="1.5" fill="white" opacity="0.9"/>
             <rect x="21" y="8" width="5" height="14" rx="1.5" fill="white" opacity="0.9"/>
           </svg>
-          <span class="font-display text-2xl font-medium text-forge-50">Vibe Board</span>
+          <span class="font-display text-2xl font-medium text-forge-50">Flowmancer</span>
         </div>
 
         <h1 class="font-display text-2xl font-medium text-forge-50 mb-1">
