@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="public/favicon.svg" width="80" height="80" alt="Vibe Board Logo" />
+  <img src="public/favicon.svg" width="80" height="80" alt="Flowmancer Logo" />
 </p>
 
-<h1 align="center">Vibe Board</h1>
+<h1 align="center">Flowmancer</h1>
 
 <p align="center">
   <strong>A beautiful, open-source kanban board with Firebase backend and AI-ready architecture.</strong>
@@ -18,9 +18,9 @@
 
 ---
 
-## What is Vibe Board?
+## What is Flowmancer?
 
-Vibe Board is an in-house Trello alternative built for teams and individuals who want full control over their task management. It features a polished dark/light theme, real-time sync via Firebase, image attachments, project grouping, and a foundation designed for future AI integrations.
+Flowmancer is an in-house Trello alternative built for teams and individuals who want full control over their task management. It features a polished dark/light theme, real-time sync via Firebase, image attachments, project grouping, and a foundation designed for future AI integrations.
 
 ### Features
 
@@ -60,8 +60,8 @@ Vibe Board is an in-house Trello alternative built for teams and individuals who
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/vibe-board.git
-cd vibe-board
+git clone https://github.com/YOUR_USERNAME/flowmancer.git
+cd flowmancer
 npm install
 ```
 
@@ -99,7 +99,7 @@ In your Firebase project, enable these three services:
 
 #### Create Firestore indexes
 
-Vibe Board uses composite queries that require indexes. The easiest way:
+Flowmancer uses composite queries that require indexes. The easiest way:
 
 1. Start the app and open the browser console
 2. You'll see errors with direct links to create the required indexes
@@ -250,5 +250,5 @@ Contributions are welcome! Please open an issue first to discuss what you'd like
 ---
 
 <p align="center">
-  Built with Vue, Tailwind, Firebase, and good vibes.
+  Built with Vue, Tailwind, Firebase, and flow state.
 </p>

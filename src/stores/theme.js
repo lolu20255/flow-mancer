@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
-const STORAGE_KEY = 'vibe-board-theme'
+const STORAGE_KEY = 'flowmancer-theme'
 
 export const useThemeStore = defineStore('theme', () => {
   const saved = localStorage.getItem(STORAGE_KEY)
