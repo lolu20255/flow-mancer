@@ -16,6 +16,14 @@
   <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT License" />
 </p>
 
+<p align="center">
+  <a href="https://flow-mancer.vercel.app/">Live Demo</a>
+</p>
+
+<p align="center">
+  <img src="src/assets/screenshots/main-view.png" alt="Flowmancer Main View" width="800" />
+</p>
+
 ---
 
 ## What is Flowmancer?
