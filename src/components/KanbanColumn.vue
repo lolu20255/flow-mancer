@@ -10,6 +10,12 @@ const props = defineProps({
   column: Object,
   index: Number,
   dragCard: Object,
+  filterProjectIds: { type: Set, default: () => new Set() },
+})
+
+const filteredCards = computed(() => {
+  if (!props.filterProjectIds.size) return props.column.cards
+  return props.column.cards.filter(c => props.filterProjectIds.has(c.projectId))
 })
 
 const emit = defineEmits(['card-drag-start', 'card-drop', 'card-drag-end'])
@@ -190,7 +196,7 @@ const accentBorder = computed(() => `${props.column.color}30`)
       <!-- Name -->
       <div v-if="!isEditingName" @dblclick="startEditName" class="flex-1 min-w-0 flex items-center gap-2">
         <span class="text-sm font-semibold text-forge-100 truncate">{{ column.name }}</span>
-        <span class="text-xs text-forge-500 tabular-nums">{{ column.cards.length }}</span>
+        <span class="text-xs text-forge-500 tabular-nums">{{ filteredCards.length }}</span>
       </div>
       <input
         v-else
@@ -229,13 +235,13 @@ const accentBorder = computed(() => `${props.column.color}30`)
     <!-- Cards -->
     <div class="flex-1 overflow-y-auto px-2.5 py-2 space-y-2 min-h-[60px]">
       <KanbanCard
-        v-for="(card, cardIndex) in column.cards"
+        v-for="card in filteredCards"
         :key="card.id"
         :card="card"
         :column-color="column.color"
         draggable="true"
-        @dragstart="onCardDragStart($event, cardIndex)"
-        @dragover="onCardDragOver($event, cardIndex)"
+        @dragstart="onCardDragStart($event, column.cards.indexOf(card))"
+        @dragover="onCardDragOver($event, column.cards.indexOf(card))"
         @dragend="onCardDragEnd"
         @click="openCardModal(card)"
       />
