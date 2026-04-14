@@ -191,6 +191,56 @@ export const useBoardStore = defineStore('board', () => {
     await persistColumns(boardId, board.columns)
   }
 
+  // Label management (board-wide)
+  async function persistBoardFields(boardId, fields) {
+    await updateDoc(doc(db, BOARDS_COL, boardId), { ...fields, updatedAt: serverTimestamp() })
+  }
+
+  async function renameLabel(boardId, oldName, newName) {
+    const board = getBoard(boardId)
+    if (!board) return
+    const trimmed = newName.trim()
+    if (!trimmed || trimmed === oldName) return
+    for (const col of board.columns) {
+      for (const card of col.cards) {
+        if (!card.labels?.length) continue
+        card.labels = card.labels.map(l => (l === oldName ? trimmed : l))
+        const seen = new Set()
+        card.labels = card.labels.filter(l => (seen.has(l) ? false : seen.add(l)))
+      }
+    }
+    const colors = { ...(board.labelColors || {}) }
+    if (colors[oldName] !== undefined) {
+      colors[trimmed] = colors[oldName]
+      delete colors[oldName]
+    }
+    board.labelColors = colors
+    await persistBoardFields(boardId, { columns: board.columns, labelColors: colors })
+  }
+
+  async function deleteLabel(boardId, name) {
+    const board = getBoard(boardId)
+    if (!board) return
+    for (const col of board.columns) {
+      for (const card of col.cards) {
+        if (!card.labels?.length) continue
+        card.labels = card.labels.filter(l => l !== name)
+      }
+    }
+    const colors = { ...(board.labelColors || {}) }
+    delete colors[name]
+    board.labelColors = colors
+    await persistBoardFields(boardId, { columns: board.columns, labelColors: colors })
+  }
+
+  async function setLabelColor(boardId, name, color) {
+    const board = getBoard(boardId)
+    if (!board) return
+    const colors = { ...(board.labelColors || {}), [name]: color }
+    board.labelColors = colors
+    await persistBoardFields(boardId, { labelColors: colors })
+  }
+
   // Image upload to Firebase Storage
   async function uploadCardImage(boardId, columnId, cardId, file) {
     const path = `boards/${boardId}/${cardId}/${Date.now()}_${file.name}`
@@ -234,6 +284,7 @@ export const useBoardStore = defineStore('board', () => {
     createBoard, getBoard, updateBoard, deleteBoard,
     addColumn, updateColumn, deleteColumn, moveColumn,
     addCard, updateCard, deleteCard, moveCard,
+    renameLabel, deleteLabel, setLabelColor,
     uploadCardImage, deleteCardImage,
   }
 })

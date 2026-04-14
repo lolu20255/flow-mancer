@@ -5,7 +5,12 @@ import { useProjectStore } from '../stores/projects.js'
 const props = defineProps({
   card: Object,
   columnColor: String,
+  labelColors: { type: Object, default: () => ({}) },
 })
+
+function labelColor(label) {
+  return props.labelColors[label] || props.columnColor
+}
 
 const projectStore = useProjectStore()
 const project = computed(() =>
@@ -50,7 +55,7 @@ const project = computed(() =>
           v-for="label in card.labels"
           :key="label"
           class="px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider"
-          :style="{ backgroundColor: columnColor + '20', color: columnColor }"
+          :style="{ backgroundColor: labelColor(label) + '20', color: labelColor(label) }"
         >
           {{ label }}
         </span>

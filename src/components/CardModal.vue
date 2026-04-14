@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useBoardStore } from '../stores/board.js'
 import { useProjectStore } from '../stores/projects.js'
 
@@ -8,7 +8,12 @@ const props = defineProps({
   boardId: String,
   columnId: String,
   columnColor: String,
+  labelColors: { type: Object, default: () => ({}) },
 })
+
+function labelColor(label) {
+  return props.labelColors[label] || props.columnColor
+}
 
 const emit = defineEmits(['close'])
 const store = useBoardStore()
@@ -21,6 +26,27 @@ const titleInput = ref(null)
 const uploading = ref(false)
 const fileInput = ref(null)
 const showProjectDropdown = ref(false)
+const showLabelSuggestions = ref(false)
+
+const boardLabels = computed(() => {
+  const board = store.getBoard(props.boardId)
+  if (!board) return []
+  const set = new Set()
+  for (const col of board.columns || []) {
+    for (const c of col.cards || []) {
+      for (const l of c.labels || []) set.add(l)
+    }
+  }
+  return [...set]
+})
+
+const labelSuggestions = computed(() => {
+  const q = newLabel.value.trim().toLowerCase()
+  const existing = new Set(props.card.labels || [])
+  return boardLabels.value
+    .filter(l => !existing.has(l) && (!q || l.toLowerCase().includes(q)))
+    .slice(0, 8)
+})
 
 onMounted(() => {
   titleInput.value?.focus()
@@ -36,11 +62,18 @@ function save() {
   emit('close')
 }
 
-function addLabel() {
-  if (!newLabel.value.trim()) return
-  const labels = [...(props.card.labels || []), newLabel.value.trim()]
+function addLabel(value) {
+  const label = (value ?? newLabel.value).trim()
+  if (!label) return
+  if ((props.card.labels || []).includes(label)) {
+    newLabel.value = ''
+    showLabelSuggestions.value = false
+    return
+  }
+  const labels = [...(props.card.labels || []), label]
   store.updateCard(props.boardId, props.columnId, props.card.id, { labels })
   newLabel.value = ''
+  showLabelSuggestions.value = false
 }
 
 function removeLabel(label) {
@@ -122,7 +155,7 @@ function formatDate(ts) {
               v-for="label in card.labels"
               :key="label"
               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors"
-              :style="{ backgroundColor: columnColor + '20', color: columnColor }"
+              :style="{ backgroundColor: labelColor(label) + '20', color: labelColor(label) }"
               @click="removeLabel(label)"
             >
               {{ label }}
@@ -131,16 +164,34 @@ function formatDate(ts) {
               </svg>
             </span>
           </div>
-          <div class="flex gap-2">
-            <input
-              v-model="newLabel"
-              @keydown.enter.prevent="addLabel"
-              type="text"
-              placeholder="Add label..."
-              class="flex-1 bg-forge-800 border border-forge-700/50 rounded-lg px-3 py-1.5 text-sm text-forge-100 placeholder-forge-500 focus:outline-none focus:border-ember/40"
-            />
+          <div class="flex gap-2 relative">
+            <div class="flex-1 relative">
+              <input
+                v-model="newLabel"
+                @keydown.enter.prevent="addLabel()"
+                @focus="showLabelSuggestions = true"
+                @blur="setTimeout(() => showLabelSuggestions = false, 150)"
+                type="text"
+                placeholder="Add label..."
+                class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-3 py-1.5 text-sm text-forge-100 placeholder-forge-500 focus:outline-none focus:border-ember/40"
+              />
+              <div
+                v-if="showLabelSuggestions && labelSuggestions.length"
+                class="absolute top-full left-0 right-0 mt-1 z-20 max-h-48 overflow-y-auto bg-forge-800 border border-forge-700/50 rounded-lg shadow-xl shadow-black/30 animate-scale-in"
+              >
+                <button
+                  v-for="suggestion in labelSuggestions"
+                  :key="suggestion"
+                  type="button"
+                  @mousedown.prevent="addLabel(suggestion)"
+                  class="w-full text-left px-3 py-1.5 text-xs text-forge-200 hover:bg-forge-700/50 transition-colors cursor-pointer"
+                >
+                  {{ suggestion }}
+                </button>
+              </div>
+            </div>
             <button
-              @click="addLabel"
+              @click="addLabel()"
               :disabled="!newLabel.trim()"
               class="px-3 py-1.5 text-xs text-ember hover:text-ember-glow disabled:opacity-40 font-medium transition-colors cursor-pointer disabled:cursor-not-allowed"
             >

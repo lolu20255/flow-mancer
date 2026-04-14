@@ -6,6 +6,7 @@ import { useProjectStore } from '../stores/projects.js'
 import KanbanColumn from '../components/KanbanColumn.vue'
 import AddColumnButton from '../components/AddColumnButton.vue'
 import EditBoardModal from '../components/EditBoardModal.vue'
+import ManageLabelsModal from '../components/ManageLabelsModal.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
 
 const route = useRoute()
@@ -15,7 +16,9 @@ const projectStore = useProjectStore()
 
 const board = computed(() => store.getBoard(route.params.id))
 const showEditBoard = ref(false)
+const showManageLabels = ref(false)
 const filterProjectIds = ref(new Set())
+const filterLabels = ref(new Set())
 
 // Projects that are actually used in this board's cards
 const boardProjects = computed(() => {
@@ -29,11 +32,29 @@ const boardProjects = computed(() => {
   return projectStore.projects.filter(p => usedIds.has(p.id))
 })
 
+const boardLabels = computed(() => {
+  if (!board.value) return []
+  const set = new Set()
+  for (const col of board.value.columns) {
+    for (const card of col.cards) {
+      for (const l of card.labels || []) set.add(l)
+    }
+  }
+  return [...set].sort((a, b) => a.localeCompare(b))
+})
+
 function toggleFilter(projectId) {
   const next = new Set(filterProjectIds.value)
   if (next.has(projectId)) next.delete(projectId)
   else next.add(projectId)
   filterProjectIds.value = next
+}
+
+function toggleLabelFilter(label) {
+  const next = new Set(filterLabels.value)
+  if (next.has(label)) next.delete(label)
+  else next.add(label)
+  filterLabels.value = next
 }
 
 // Drag state for columns
@@ -141,11 +162,42 @@ function goBack() {
       </button>
     </div>
 
+    <!-- Label Filter -->
+    <div v-if="boardLabels.length" class="shrink-0 px-8 pt-2 flex items-center gap-2 flex-wrap animate-fade-in">
+      <span class="text-[11px] font-medium uppercase tracking-widest text-forge-500 mr-1">Filter by Label</span>
+      <button v-for="label in boardLabels" :key="label" @click="toggleLabelFilter(label)"
+        class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer border"
+        :class="filterLabels.has(label)
+          ? 'text-white border-transparent shadow-md'
+          : 'text-forge-400 border-forge-700/40 hover:text-forge-200 hover:border-forge-600/60 bg-forge-900/50'"
+        :style="filterLabels.has(label)
+          ? { backgroundColor: (board.labelColors?.[label] || '#f97316'), boxShadow: `0 2px 8px ${(board.labelColors?.[label] || '#f97316')}30` }
+          : {}">
+        <div class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: board.labelColors?.[label] || '#f97316' }"></div>
+        <span>{{ label }}</span>
+      </button>
+      <button @click="showManageLabels = true"
+        class="ml-1 p-1 rounded-full text-forge-500 hover:text-forge-200 hover:bg-forge-800/50 transition-colors cursor-pointer"
+        title="Manage labels">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </button>
+      <button v-if="filterLabels.size" @click="filterLabels = new Set()"
+        class="ml-1 p-1 rounded-full text-forge-500 hover:text-forge-300 hover:bg-forge-800/50 transition-colors cursor-pointer"
+        title="Clear filter">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
     <!-- Kanban Board -->
     <main class="flex-1 overflow-x-auto overflow-y-hidden px-6 py-5">
       <div class="flex gap-4 h-full items-start">
         <KanbanColumn v-for="(column, index) in board.columns" :key="column.id" :board-id="board.id" :column="column"
-          :index="index" :filter-project-ids="filterProjectIds" :drag-card="dragCard"
+          :index="index" :filter-project-ids="filterProjectIds" :filter-labels="filterLabels" :drag-card="dragCard"
           :style="{ animationDelay: `${index * 80}ms` }" class="animate-fade-in-up" draggable="true"
           @dragstart.self="onColumnDragStart(index)" @dragover.self="onColumnDragOver($event, index)"
           @dragend.self="onColumnDragEnd" @card-drag-start="onCardDragStart" @card-drop="onCardDrop"
@@ -156,6 +208,9 @@ function goBack() {
 
     <!-- Edit Board Modal -->
     <EditBoardModal v-if="showEditBoard" :board="board" @close="showEditBoard = false" />
+
+    <!-- Manage Labels Modal -->
+    <ManageLabelsModal v-if="showManageLabels" :board="board" @close="showManageLabels = false" />
   </div>
 
   <div v-else class="h-full flex items-center justify-center bg-forge-950">
