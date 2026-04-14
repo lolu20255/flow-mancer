@@ -11,16 +11,25 @@ const props = defineProps({
   index: Number,
   dragCard: Object,
   filterProjectIds: { type: Set, default: () => new Set() },
+  filterLabels: { type: Set, default: () => new Set() },
 })
 
+const store = useBoardStore()
+const labelColors = computed(() => store.getBoard(props.boardId)?.labelColors || {})
+
 const filteredCards = computed(() => {
-  if (!props.filterProjectIds.size) return props.column.cards
-  return props.column.cards.filter(c => props.filterProjectIds.has(c.projectId))
+  const hasProject = props.filterProjectIds.size > 0
+  const hasLabel = props.filterLabels.size > 0
+  if (!hasProject && !hasLabel) return props.column.cards
+  return props.column.cards.filter(c => {
+    if (hasProject && !props.filterProjectIds.has(c.projectId)) return false
+    if (hasLabel && !(c.labels || []).some(l => props.filterLabels.has(l))) return false
+    return true
+  })
 })
 
 const emit = defineEmits(['card-drag-start', 'card-drop', 'card-drag-end'])
 
-const store = useBoardStore()
 const projectStore = useProjectStore()
 
 // Inline editing column name
@@ -239,6 +248,7 @@ const accentBorder = computed(() => `${props.column.color}30`)
         :key="card.id"
         :card="card"
         :column-color="column.color"
+        :label-colors="labelColors"
         draggable="true"
         @dragstart="onCardDragStart($event, column.cards.indexOf(card))"
         @dragover="onCardDragOver($event, column.cards.indexOf(card))"
@@ -297,7 +307,7 @@ const accentBorder = computed(() => `${props.column.color}30`)
           <!-- Dropdown -->
           <div
             v-if="showProjectPicker"
-            class="absolute bottom-full left-0 mb-1 z-20 w-44 bg-forge-800 border border-forge-700/50 rounded-lg shadow-xl shadow-black/30 overflow-hidden animate-scale-in"
+            class="absolute bottom-full left-0 mb-1 z-20 w-44 max-h-48 overflow-y-auto bg-forge-800 border border-forge-700/50 rounded-lg shadow-xl shadow-black/30 animate-scale-in"
           >
             <button
               v-for="project in projectStore.projects"
@@ -346,6 +356,7 @@ const accentBorder = computed(() => `${props.column.color}30`)
       :board-id="boardId"
       :column-id="column.id"
       :column-color="column.color"
+      :label-colors="labelColors"
       @close="editingCard = null"
     />
   </div>
