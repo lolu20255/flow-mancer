@@ -43,7 +43,11 @@ export const useBoardStore = defineStore('board', () => {
     if (unsubscribe) return
     const uid = auth.currentUser?.uid
     if (!uid) return
-    const q = query(collection(db, BOARDS_COL), where('userId', '==', uid), orderBy('createdAt', 'asc'))
+    const q = query(
+      collection(db, BOARDS_COL),
+      where('members', 'array-contains', uid),
+      orderBy('createdAt', 'asc'),
+    )
     unsubscribe = onSnapshot(q, (snapshot) => {
       boards.value = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
       loading.value = false
@@ -51,6 +55,23 @@ export const useBoardStore = defineStore('board', () => {
       console.error('Firestore listener error:', err)
       loading.value = false
     })
+  }
+
+  async function backfillLegacyBoards() {
+    const uid = auth.currentUser?.uid
+    if (!uid) return
+    const legacyQ = query(collection(db, BOARDS_COL), where('userId', '==', uid))
+    const { getDocs } = await import('firebase/firestore')
+    const snap = await getDocs(legacyQ)
+    for (const d of snap.docs) {
+      const data = d.data()
+      if (!Array.isArray(data.members) || !data.roles) {
+        await updateDoc(doc(db, BOARDS_COL, d.id), {
+          members: [uid],
+          roles: { ...(data.roles || {}), [uid]: 'owner' },
+        })
+      }
+    }
   }
 
   function cleanup() {
@@ -77,11 +98,24 @@ export const useBoardStore = defineStore('board', () => {
       emoji,
       columns: [],
       userId: uid,
+      members: [uid],
+      roles: { [uid]: 'owner' },
       createdBy: user,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
     return { id: docRef.id, name, emoji, columns: [] }
+  }
+
+  // Lazy migration: backfill members/roles on legacy boards owned by current user
+  async function migrateLegacyBoard(board) {
+    const uid = auth.currentUser?.uid
+    if (!uid) return
+    if (board.members && board.roles) return
+    if (board.userId !== uid) return
+    const members = [uid]
+    const roles = { [uid]: 'owner' }
+    await updateDoc(doc(db, BOARDS_COL, board.id), { members, roles })
   }
 
   function getBoard(id) {
@@ -191,6 +225,48 @@ export const useBoardStore = defineStore('board', () => {
     await persistColumns(boardId, board.columns)
   }
 
+  // Membership / sharing
+  function myRole(boardId) {
+    const uid = auth.currentUser?.uid
+    const board = getBoard(boardId)
+    if (!uid || !board) return null
+    if (board.roles?.[uid]) return board.roles[uid]
+    if (board.userId === uid) return 'owner'
+    return null
+  }
+
+  async function inviteMember(boardId, targetUid, role = 'editor') {
+    const board = getBoard(boardId)
+    if (!board) return
+    if (!targetUid) return
+    const members = Array.from(new Set([...(board.members || []), targetUid]))
+    const roles = { ...(board.roles || {}), [targetUid]: role }
+    board.members = members
+    board.roles = roles
+    await updateDoc(doc(db, BOARDS_COL, boardId), { members, roles, updatedAt: serverTimestamp() })
+  }
+
+  async function updateMemberRole(boardId, targetUid, role) {
+    const board = getBoard(boardId)
+    if (!board) return
+    if (board.userId === targetUid) return
+    const roles = { ...(board.roles || {}), [targetUid]: role }
+    board.roles = roles
+    await updateDoc(doc(db, BOARDS_COL, boardId), { roles, updatedAt: serverTimestamp() })
+  }
+
+  async function removeMember(boardId, targetUid) {
+    const board = getBoard(boardId)
+    if (!board) return
+    if (board.userId === targetUid) return
+    const members = (board.members || []).filter(m => m !== targetUid)
+    const roles = { ...(board.roles || {}) }
+    delete roles[targetUid]
+    board.members = members
+    board.roles = roles
+    await updateDoc(doc(db, BOARDS_COL, boardId), { members, roles, updatedAt: serverTimestamp() })
+  }
+
   // Label management (board-wide)
   async function persistBoardFields(boardId, fields) {
     await updateDoc(doc(db, BOARDS_COL, boardId), { ...fields, updatedAt: serverTimestamp() })
@@ -280,10 +356,11 @@ export const useBoardStore = defineStore('board', () => {
 
   return {
     boards, loading,
-    init, cleanup,
+    init, cleanup, backfillLegacyBoards,
     createBoard, getBoard, updateBoard, deleteBoard,
     addColumn, updateColumn, deleteColumn, moveColumn,
     addCard, updateCard, deleteCard, moveCard,
+    myRole, inviteMember, updateMemberRole, removeMember,
     renameLabel, deleteLabel, setLabelColor,
     uploadCardImage, deleteCardImage,
   }

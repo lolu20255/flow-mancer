@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBoardStore } from '../stores/board.js'
 import { useProjectStore } from '../stores/projects.js'
@@ -7,6 +7,7 @@ import KanbanColumn from '../components/KanbanColumn.vue'
 import AddColumnButton from '../components/AddColumnButton.vue'
 import EditBoardModal from '../components/EditBoardModal.vue'
 import ManageLabelsModal from '../components/ManageLabelsModal.vue'
+import ShareBoardModal from '../components/ShareBoardModal.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
 
 const route = useRoute()
@@ -17,6 +18,11 @@ const projectStore = useProjectStore()
 const board = computed(() => store.getBoard(route.params.id))
 const showEditBoard = ref(false)
 const showManageLabels = ref(false)
+const showShareBoard = ref(false)
+
+const myRole = computed(() => board.value ? store.myRole(board.value.id) : null)
+const canEdit = computed(() => myRole.value === 'owner' || myRole.value === 'editor')
+const isOwner = computed(() => myRole.value === 'owner')
 const filterProjectIds = ref(new Set())
 const filterLabels = ref(new Set())
 
@@ -101,6 +107,18 @@ function onCardDragEnd() {
 function goBack() {
   router.push({ name: 'dashboard' })
 }
+
+// Grace period: avoid flashing "Board not found" during the initial snapshot race
+const graceElapsed = ref(false)
+let graceTimer = null
+onMounted(() => {
+  graceTimer = setTimeout(() => { graceElapsed.value = true }, 1500)
+})
+onUnmounted(() => {
+  if (graceTimer) clearTimeout(graceTimer)
+})
+
+const isLoading = computed(() => store.loading || !graceElapsed.value)
 </script>
 
 <template>
@@ -115,17 +133,20 @@ function goBack() {
           </svg>
         </button>
 
-        <button @click="showEditBoard = true"
-          class="flex items-center gap-2.5 group cursor-pointer bg-transparent border-0 p-0">
+        <button @click="canEdit && (showEditBoard = true)"
+          :class="['flex items-center gap-2.5 group bg-transparent border-0 p-0', canEdit ? 'cursor-pointer' : 'cursor-default']">
           <span class="text-2xl">{{ board.emoji }}</span>
           <h1 class="font-display text-xl font-medium text-forge-50 group-hover:text-forge-50 transition-colors">
             {{ board.name }}
           </h1>
-          <svg class="w-3.5 h-3.5 text-forge-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none"
+          <svg v-if="canEdit" class="w-3.5 h-3.5 text-forge-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none"
             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round"
               d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
           </svg>
+          <span v-if="!canEdit && myRole" class="ml-2 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider bg-forge-800 text-forge-400 border border-forge-700/40">
+            {{ myRole }}
+          </span>
         </button>
 
         <div class="ml-auto flex items-center gap-4">
@@ -134,6 +155,14 @@ function goBack() {
             <span class="w-1 h-1 rounded-full bg-forge-600"></span>
             <span>{{board.columns.reduce((sum, col) => sum + col.cards.length, 0)}} cards</span>
           </div>
+          <button @click="showShareBoard = true"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-forge-200 hover:text-forge-50 bg-forge-800/60 hover:bg-forge-800 border border-forge-700/40 hover:border-forge-600/60 transition-all cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            <span>Share</span>
+            <span v-if="(board.members || []).length > 1" class="text-forge-500">· {{ (board.members || []).length }}</span>
+          </button>
           <ThemeToggle />
         </div>
       </div>
@@ -176,7 +205,7 @@ function goBack() {
         <div class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: board.labelColors?.[label] || '#f97316' }"></div>
         <span>{{ label }}</span>
       </button>
-      <button @click="showManageLabels = true"
+      <button v-if="canEdit" @click="showManageLabels = true"
         class="ml-1 p-1 rounded-full text-forge-500 hover:text-forge-200 hover:bg-forge-800/50 transition-colors cursor-pointer"
         title="Manage labels">
         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -198,19 +227,28 @@ function goBack() {
       <div class="flex gap-4 h-full items-start">
         <KanbanColumn v-for="(column, index) in board.columns" :key="column.id" :board-id="board.id" :column="column"
           :index="index" :filter-project-ids="filterProjectIds" :filter-labels="filterLabels" :drag-card="dragCard"
-          :style="{ animationDelay: `${index * 80}ms` }" class="animate-fade-in-up" draggable="true"
-          @dragstart.self="onColumnDragStart(index)" @dragover.self="onColumnDragOver($event, index)"
+          :can-edit="canEdit"
+          :style="{ animationDelay: `${index * 80}ms` }" class="animate-fade-in-up" :draggable="canEdit"
+          @dragstart.self="canEdit && onColumnDragStart(index)" @dragover.self="canEdit && onColumnDragOver($event, index)"
           @dragend.self="onColumnDragEnd" @card-drag-start="onCardDragStart" @card-drop="onCardDrop"
           @card-drag-end="onCardDragEnd" />
-        <AddColumnButton :board-id="board.id" />
+        <AddColumnButton v-if="canEdit" :board-id="board.id" />
       </div>
     </main>
 
     <!-- Edit Board Modal -->
-    <EditBoardModal v-if="showEditBoard" :board="board" @close="showEditBoard = false" />
+    <EditBoardModal v-if="showEditBoard && canEdit" :board="board" @close="showEditBoard = false" />
 
     <!-- Manage Labels Modal -->
-    <ManageLabelsModal v-if="showManageLabels" :board="board" @close="showManageLabels = false" />
+    <ManageLabelsModal v-if="showManageLabels && canEdit" :board="board" @close="showManageLabels = false" />
+
+    <!-- Share Board Modal -->
+    <ShareBoardModal v-if="showShareBoard" :board="board" @close="showShareBoard = false" />
+  </div>
+
+  <div v-else-if="isLoading" class="h-full flex flex-col items-center justify-center bg-forge-950 gap-4">
+    <div class="w-10 h-10 border-2 border-forge-700 border-t-ember rounded-full animate-spin"></div>
+    <p class="text-forge-500 text-sm">Loading board…</p>
   </div>
 
   <div v-else class="h-full flex items-center justify-center bg-forge-950">
