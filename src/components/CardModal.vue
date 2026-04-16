@@ -9,6 +9,7 @@ const props = defineProps({
   columnId: String,
   columnColor: String,
   labelColors: { type: Object, default: () => ({}) },
+  canEdit: { type: Boolean, default: true },
 })
 
 function labelColor(label) {
@@ -60,6 +61,10 @@ function save() {
     description: description.value.trim(),
   })
   emit('close')
+}
+
+function hideSuggestionsSoon() {
+  setTimeout(() => { showLabelSuggestions.value = false }, 150)
 }
 
 function addLabel(value) {
@@ -132,7 +137,8 @@ function formatDate(ts) {
             v-model="title"
             @keydown.enter.prevent="save"
             type="text"
-            class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-forge-50 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/25 transition-all"
+            :readonly="!canEdit"
+            class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-forge-50 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/25 transition-all read-only:opacity-70"
           />
         </div>
 
@@ -143,7 +149,8 @@ function formatDate(ts) {
             v-model="description"
             rows="3"
             placeholder="Add details..."
-            class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-forge-50 placeholder-forge-500 resize-none focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/25 transition-all"
+            :readonly="!canEdit"
+            class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-forge-50 placeholder-forge-500 resize-none focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/25 transition-all read-only:opacity-70"
           ></textarea>
         </div>
 
@@ -154,23 +161,24 @@ function formatDate(ts) {
             <span
               v-for="label in card.labels"
               :key="label"
-              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
+              :class="canEdit ? 'cursor-pointer' : ''"
               :style="{ backgroundColor: labelColor(label) + '20', color: labelColor(label) }"
-              @click="removeLabel(label)"
+              @click="canEdit && removeLabel(label)"
             >
               {{ label }}
-              <svg class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg v-if="canEdit" class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </span>
           </div>
-          <div class="flex gap-2 relative">
+          <div v-if="canEdit" class="flex gap-2 relative">
             <div class="flex-1 relative">
               <input
                 v-model="newLabel"
                 @keydown.enter.prevent="addLabel()"
                 @focus="showLabelSuggestions = true"
-                @blur="setTimeout(() => showLabelSuggestions = false, 150)"
+                @blur="hideSuggestionsSoon"
                 type="text"
                 placeholder="Add label..."
                 class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-3 py-1.5 text-sm text-forge-100 placeholder-forge-500 focus:outline-none focus:border-ember/40"
@@ -205,9 +213,10 @@ function formatDate(ts) {
           <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Project</label>
           <div class="relative">
             <button
-              @click="showProjectDropdown = !showProjectDropdown"
-              class="w-full flex items-center gap-2.5 bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-left transition-all cursor-pointer hover:border-forge-600/50"
-              :class="showProjectDropdown ? 'border-ember/50 ring-1 ring-ember/25' : ''"
+              @click="canEdit && (showProjectDropdown = !showProjectDropdown)"
+              :disabled="!canEdit"
+              class="w-full flex items-center gap-2.5 bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-left transition-all"
+              :class="[showProjectDropdown ? 'border-ember/50 ring-1 ring-ember/25' : '', canEdit ? 'cursor-pointer hover:border-forge-600/50' : 'cursor-default opacity-70']"
             >
               <template v-if="card.projectId && projectStore.getProject(card.projectId)">
                 <div
@@ -280,6 +289,7 @@ function formatDate(ts) {
                 @click="lightboxUrl = image.url"
               />
               <button
+                v-if="canEdit"
                 @click="removeImage(image)"
                 class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer hover:bg-red-500/80"
               >
@@ -300,6 +310,7 @@ function formatDate(ts) {
             @change="handleFileSelect"
           />
           <button
+            v-if="canEdit"
             @click="fileInput?.click()"
             :disabled="uploading"
             class="w-full py-3 border-2 border-dashed border-forge-700/40 hover:border-forge-600/60 rounded-lg text-forge-500 hover:text-forge-300 text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -367,19 +378,22 @@ function formatDate(ts) {
         <!-- Actions -->
         <div class="flex items-center justify-between">
           <button
+            v-if="canEdit"
             @click="deleteCard"
             class="px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
           >
             Delete Card
           </button>
+          <span v-else></span>
           <div class="flex gap-3">
             <button
               @click="emit('close')"
               class="px-4 py-2 text-sm text-forge-300 hover:text-forge-100 transition-colors cursor-pointer"
             >
-              Cancel
+              {{ canEdit ? 'Cancel' : 'Close' }}
             </button>
             <button
+              v-if="canEdit"
               @click="save"
               class="px-5 py-2 bg-ember hover:bg-ember-glow text-white text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer"
             >

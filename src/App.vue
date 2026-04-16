@@ -5,21 +5,27 @@ import { useThemeStore } from './stores/theme.js'
 import { useBoardStore } from './stores/board.js'
 import { useProjectStore } from './stores/projects.js'
 import { useAuthStore } from './stores/auth.js'
+import { useUsersStore } from './stores/users.js'
 
 useThemeStore()
 
 const authStore = useAuthStore()
 const boardStore = useBoardStore()
 const projectStore = useProjectStore()
+const usersStore = useUsersStore()
 
 // Start/stop Firestore listeners when auth state changes
-watch(() => authStore.isAuthenticated, (authed) => {
+watch(() => authStore.isAuthenticated, async (authed) => {
   if (authed) {
+    await usersStore.upsertCurrentUser()
+    usersStore.loadAll()
+    await boardStore.backfillLegacyBoards()
     boardStore.init()
     projectStore.init()
   } else {
     boardStore.cleanup()
     projectStore.cleanup()
+    usersStore.reset()
   }
 }, { immediate: true })
 

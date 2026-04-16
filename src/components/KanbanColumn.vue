@@ -12,6 +12,7 @@ const props = defineProps({
   dragCard: Object,
   filterProjectIds: { type: Set, default: () => new Set() },
   filterLabels: { type: Set, default: () => new Set() },
+  canEdit: { type: Boolean, default: true },
 })
 
 const store = useBoardStore()
@@ -168,14 +169,16 @@ const accentBorder = computed(() => `${props.column.color}30`)
   >
     <!-- Column Header -->
     <div
-      class="shrink-0 px-3.5 py-3 flex items-center gap-2 cursor-grab active:cursor-grabbing"
+      :class="['shrink-0 px-3.5 py-3 flex items-center gap-2', canEdit ? 'cursor-grab active:cursor-grabbing' : '']"
     >
       <!-- Color dot + picker -->
       <div class="relative">
         <button
           ref="colorDotRef"
-          @click.stop="showColorPicker = !showColorPicker"
-          class="w-3 h-3 rounded-full shrink-0 cursor-pointer border-0 p-0 transition-transform hover:scale-125"
+          @click.stop="canEdit && (showColorPicker = !showColorPicker)"
+          :disabled="!canEdit"
+          class="w-3 h-3 rounded-full shrink-0 border-0 p-0 transition-transform"
+          :class="canEdit ? 'cursor-pointer hover:scale-125' : 'cursor-default'"
           :style="{ backgroundColor: column.color, boxShadow: `0 0 8px ${column.color}50` }"
         ></button>
 
@@ -203,7 +206,7 @@ const accentBorder = computed(() => `${props.column.color}30`)
       </div>
 
       <!-- Name -->
-      <div v-if="!isEditingName" @dblclick="startEditName" class="flex-1 min-w-0 flex items-center gap-2">
+      <div v-if="!isEditingName" @dblclick="canEdit && startEditName()" class="flex-1 min-w-0 flex items-center gap-2">
         <span class="text-sm font-semibold text-forge-100 truncate">{{ column.name }}</span>
         <span class="text-xs text-forge-500 tabular-nums">{{ filteredCards.length }}</span>
       </div>
@@ -218,7 +221,7 @@ const accentBorder = computed(() => `${props.column.color}30`)
       />
 
       <!-- Column menu -->
-      <div class="flex items-center gap-0.5">
+      <div v-if="canEdit" class="flex items-center gap-0.5">
         <button
           @click.stop="openAddCard"
           class="p-1 rounded text-forge-500 hover:text-forge-200 hover:bg-forge-700/50 transition-colors cursor-pointer"
@@ -249,9 +252,9 @@ const accentBorder = computed(() => `${props.column.color}30`)
         :card="card"
         :column-color="column.color"
         :label-colors="labelColors"
-        draggable="true"
-        @dragstart="onCardDragStart($event, column.cards.indexOf(card))"
-        @dragover="onCardDragOver($event, column.cards.indexOf(card))"
+        :draggable="canEdit"
+        @dragstart="canEdit && onCardDragStart($event, column.cards.indexOf(card))"
+        @dragover="canEdit && onCardDragOver($event, column.cards.indexOf(card))"
         @dragend="onCardDragEnd"
         @click="openCardModal(card)"
       />
@@ -336,7 +339,7 @@ const accentBorder = computed(() => `${props.column.color}30`)
     </div>
 
     <!-- Add card button (bottom) -->
-    <div class="shrink-0 px-2.5 pb-2.5">
+    <div v-if="canEdit" class="shrink-0 px-2.5 pb-2.5">
       <button
         v-if="!showAddCard"
         @click="openAddCard"
@@ -357,6 +360,7 @@ const accentBorder = computed(() => `${props.column.color}30`)
       :column-id="column.id"
       :column-color="column.color"
       :label-colors="labelColors"
+      :can-edit="canEdit"
       @close="editingCard = null"
     />
   </div>
