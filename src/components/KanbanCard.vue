@@ -66,6 +66,17 @@ const project = computed(() =>
       <p v-if="card.description" class="text-xs text-forge-500 mt-1.5 line-clamp-2">
         {{ card.description }}
       </p>
+
+      <!-- Assignee -->
+      <div v-if="card.assignee" class="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-forge-700/30">
+        <div v-if="card.assignee.photo" class="w-5 h-5 rounded-full overflow-hidden bg-forge-700 shrink-0">
+          <img :src="card.assignee.photo" :alt="card.assignee.name" class="w-full h-full object-cover" />
+        </div>
+        <div v-else class="w-5 h-5 rounded-full bg-forge-700 flex items-center justify-center shrink-0">
+          <span class="text-[9px] font-bold text-forge-300">{{ (card.assignee.name || '?').charAt(0).toUpperCase() }}</span>
+        </div>
+        <span class="text-[11px] font-medium text-forge-400 truncate">{{ card.assignee.name }}</span>
+      </div>
     </div>
   </div>
 </template>
