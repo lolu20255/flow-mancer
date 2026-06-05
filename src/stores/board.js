@@ -182,6 +182,7 @@ export const useBoardStore = defineStore('board', () => {
       description,
       labels: [],
       images: [],
+      assignee: null,
       createdBy: user,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -211,6 +212,21 @@ export const useBoardStore = defineStore('board', () => {
     if (!col) return
     const idx = col.cards.findIndex(c => c.id === cardId)
     if (idx !== -1) col.cards.splice(idx, 1)
+    await persistColumns(boardId, board.columns)
+  }
+
+  // Move a card to the end of another column (used by the card modal's status picker)
+  async function moveCardToColumn(boardId, fromColumnId, toColumnId, cardId) {
+    if (fromColumnId === toColumnId) return
+    const board = getBoard(boardId)
+    if (!board) return
+    const fromCol = board.columns.find(c => c.id === fromColumnId)
+    const toCol = board.columns.find(c => c.id === toColumnId)
+    if (!fromCol || !toCol) return
+    const idx = fromCol.cards.findIndex(c => c.id === cardId)
+    if (idx === -1) return
+    const [card] = fromCol.cards.splice(idx, 1)
+    toCol.cards.push(card)
     await persistColumns(boardId, board.columns)
   }
 
@@ -359,7 +375,7 @@ export const useBoardStore = defineStore('board', () => {
     init, cleanup, backfillLegacyBoards,
     createBoard, getBoard, updateBoard, deleteBoard,
     addColumn, updateColumn, deleteColumn, moveColumn,
-    addCard, updateCard, deleteCard, moveCard,
+    addCard, updateCard, deleteCard, moveCard, moveCardToColumn,
     myRole, inviteMember, updateMemberRole, removeMember,
     renameLabel, deleteLabel, setLabelColor,
     uploadCardImage, deleteCardImage,

@@ -11,6 +11,13 @@ Flowmancer (formerly Vibe Board) is an open-source kanban board app. It's a Trel
 ## Rules
 - Never run any git commands
 
+## Session Memory
+- At the start of every new session, read all files in `docs/memories/` to recover
+  context from prior sessions. Files are named `YYYY_MM_DD_MEMORY.md` (most recent
+  date = most recent session).
+- At the end of a session, save a memory file at `docs/memories/<year>_<month>_<day>_MEMORY.md`
+  summarizing what was done, key changes, and any open follow-ups.
+
 ## Tech Stack
 
 - **Framework**: Vue 3 (Composition API + `<script setup>`)

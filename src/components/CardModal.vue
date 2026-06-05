@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useBoardStore } from '../stores/board.js'
 import { useProjectStore } from '../stores/projects.js'
+import { useUsersStore } from '../stores/users.js'
 
 const props = defineProps({
   card: Object,
@@ -12,13 +13,33 @@ const props = defineProps({
   canEdit: { type: Boolean, default: true },
 })
 
-function labelColor(label) {
-  return props.labelColors[label] || props.columnColor
-}
-
 const emit = defineEmits(['close'])
 const store = useBoardStore()
 const projectStore = useProjectStore()
+const usersStore = useUsersStore()
+
+// The card can be moved between columns from within the modal, so track its
+// current column locally and use it for every mutation below.
+const currentColumnId = ref(props.columnId)
+
+const boardColumns = computed(() => store.getBoard(props.boardId)?.columns || [])
+const currentColumn = computed(() =>
+  boardColumns.value.find(c => c.id === currentColumnId.value)
+)
+const activeColumnColor = computed(() => currentColumn.value?.color || props.columnColor)
+
+function labelColor(label) {
+  return props.labelColors[label] || activeColumnColor.value
+}
+
+const showStatusDropdown = ref(false)
+
+function moveToColumn(colId) {
+  showStatusDropdown.value = false
+  if (colId === currentColumnId.value) return
+  store.moveCardToColumn(props.boardId, currentColumnId.value, colId, props.card.id)
+  currentColumnId.value = colId
+}
 
 const title = ref(props.card.title)
 const description = ref(props.card.description || '')
@@ -28,6 +49,28 @@ const uploading = ref(false)
 const fileInput = ref(null)
 const showProjectDropdown = ref(false)
 const showLabelSuggestions = ref(false)
+const showAssigneeDropdown = ref(false)
+
+const boardMembers = computed(() => {
+  const board = store.getBoard(props.boardId)
+  if (!board) return []
+  return (board.members || []).map(uid => {
+    const u = usersStore.getUser(uid)
+    return {
+      uid,
+      name: u?.name || 'Unknown',
+      photo: u?.photo || null,
+    }
+  })
+})
+
+function assign(member) {
+  const assignee = member
+    ? { uid: member.uid, name: member.name, photo: member.photo || null }
+    : null
+  store.updateCard(props.boardId, currentColumnId.value, props.card.id, { assignee })
+  showAssigneeDropdown.value = false
+}
 
 const boardLabels = computed(() => {
   const board = store.getBoard(props.boardId)
@@ -52,11 +95,12 @@ const labelSuggestions = computed(() => {
 onMounted(() => {
   titleInput.value?.focus()
   titleInput.value?.select()
+  usersStore.ensureLoaded()
 })
 
 function save() {
   if (!title.value.trim()) return
-  store.updateCard(props.boardId, props.columnId, props.card.id, {
+  store.updateCard(props.boardId, currentColumnId.value, props.card.id, {
     title: title.value.trim(),
     description: description.value.trim(),
   })
@@ -76,18 +120,18 @@ function addLabel(value) {
     return
   }
   const labels = [...(props.card.labels || []), label]
-  store.updateCard(props.boardId, props.columnId, props.card.id, { labels })
+  store.updateCard(props.boardId, currentColumnId.value, props.card.id, { labels })
   newLabel.value = ''
   showLabelSuggestions.value = false
 }
 
 function removeLabel(label) {
   const labels = (props.card.labels || []).filter(l => l !== label)
-  store.updateCard(props.boardId, props.columnId, props.card.id, { labels })
+  store.updateCard(props.boardId, currentColumnId.value, props.card.id, { labels })
 }
 
 function deleteCard() {
-  store.deleteCard(props.boardId, props.columnId, props.card.id)
+  store.deleteCard(props.boardId, currentColumnId.value, props.card.id)
   emit('close')
 }
 
@@ -97,14 +141,14 @@ async function handleFileSelect(e) {
   if (!files?.length) return
   uploading.value = true
   for (const file of files) {
-    await store.uploadCardImage(props.boardId, props.columnId, props.card.id, file)
+    await store.uploadCardImage(props.boardId, currentColumnId.value, props.card.id, file)
   }
   uploading.value = false
   if (fileInput.value) fileInput.value.value = ''
 }
 
 async function removeImage(image) {
-  await store.deleteCardImage(props.boardId, props.columnId, props.card.id, image)
+  await store.deleteCardImage(props.boardId, currentColumnId.value, props.card.id, image)
 }
 
 // Lightbox
@@ -127,7 +171,46 @@ function formatDate(ts) {
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" @click="emit('close')"></div>
       <div class="relative bg-forge-900 border border-forge-700/50 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/40 animate-scale-in">
         <!-- Color accent bar -->
-        <div class="absolute top-0 left-6 right-6 h-0.5 rounded-b" :style="{ backgroundColor: columnColor }"></div>
+        <div class="absolute top-0 left-6 right-6 h-0.5 rounded-b" :style="{ backgroundColor: activeColumnColor }"></div>
+
+        <!-- Status / Column -->
+        <div class="mb-4">
+          <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Status</label>
+          <div class="relative">
+            <button
+              @click="canEdit && (showStatusDropdown = !showStatusDropdown)"
+              :disabled="!canEdit"
+              class="w-full flex items-center gap-2.5 bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-left transition-all"
+              :class="[showStatusDropdown ? 'border-ember/50 ring-1 ring-ember/25' : '', canEdit ? 'cursor-pointer hover:border-forge-600/50' : 'cursor-default opacity-70']"
+            >
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: activeColumnColor }"></span>
+              <span class="text-sm text-forge-100 flex-1">{{ currentColumn?.name || 'Unknown' }}</span>
+              <svg class="w-4 h-4 text-forge-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <!-- Dropdown -->
+            <div
+              v-if="showStatusDropdown"
+              class="absolute top-full left-0 right-0 mt-1 z-20 max-h-56 overflow-y-auto bg-forge-800 border border-forge-700/50 rounded-lg shadow-xl shadow-black/30 animate-scale-in"
+            >
+              <button
+                v-for="col in boardColumns"
+                :key="col.id"
+                @click="moveToColumn(col.id)"
+                class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-forge-700/50 transition-colors cursor-pointer"
+                :class="col.id === currentColumnId ? 'bg-forge-700/30' : ''"
+              >
+                <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: col.color }"></span>
+                <span class="text-sm text-forge-100 flex-1">{{ col.name }}</span>
+                <svg v-if="col.id === currentColumnId" class="w-4 h-4 text-ember" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- Title -->
         <div class="mb-4">
@@ -241,7 +324,7 @@ function formatDate(ts) {
             >
               <!-- No project option -->
               <button
-                @click="store.updateCard(boardId, columnId, card.id, { projectId: null }); showProjectDropdown = false"
+                @click="store.updateCard(boardId, currentColumnId, card.id, { projectId: null }); showProjectDropdown = false"
                 class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-forge-700/50 transition-colors cursor-pointer"
                 :class="!card.projectId ? 'bg-forge-700/30' : ''"
               >
@@ -253,7 +336,7 @@ function formatDate(ts) {
               <button
                 v-for="project in projectStore.projects"
                 :key="project.id"
-                @click="store.updateCard(boardId, columnId, card.id, { projectId: project.id }); showProjectDropdown = false"
+                @click="store.updateCard(boardId, currentColumnId, card.id, { projectId: project.id }); showProjectDropdown = false"
                 class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-forge-700/50 transition-colors cursor-pointer"
                 :class="card.projectId === project.id ? 'bg-forge-700/30' : ''"
               >
@@ -264,6 +347,71 @@ function formatDate(ts) {
                 <span class="text-sm">{{ project.emoji }}</span>
                 <span class="text-sm text-forge-100">{{ project.name }}</span>
                 <svg v-if="card.projectId === project.id" class="w-4 h-4 text-ember ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assignee -->
+        <div class="mb-4">
+          <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Assignee</label>
+          <div class="relative">
+            <button
+              @click="canEdit && (showAssigneeDropdown = !showAssigneeDropdown)"
+              :disabled="!canEdit"
+              class="w-full flex items-center gap-2.5 bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-left transition-all"
+              :class="[showAssigneeDropdown ? 'border-ember/50 ring-1 ring-ember/25' : '', canEdit ? 'cursor-pointer hover:border-forge-600/50' : 'cursor-default opacity-70']"
+            >
+              <template v-if="card.assignee">
+                <div v-if="card.assignee.photo" class="w-5 h-5 rounded-full overflow-hidden bg-forge-700 shrink-0">
+                  <img :src="card.assignee.photo" class="w-full h-full object-cover" />
+                </div>
+                <div v-else class="w-5 h-5 rounded-full bg-forge-700 flex items-center justify-center shrink-0">
+                  <span class="text-[9px] font-bold text-forge-300">{{ (card.assignee.name || '?').charAt(0).toUpperCase() }}</span>
+                </div>
+                <span class="text-sm text-forge-100 flex-1">{{ card.assignee.name }}</span>
+              </template>
+              <template v-else>
+                <span class="text-sm text-forge-500 flex-1">Unassigned</span>
+              </template>
+              <svg class="w-4 h-4 text-forge-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <!-- Dropdown -->
+            <div
+              v-if="showAssigneeDropdown"
+              class="absolute top-full left-0 right-0 mt-1 z-20 max-h-56 overflow-y-auto bg-forge-800 border border-forge-700/50 rounded-lg shadow-xl shadow-black/30 animate-scale-in"
+            >
+              <!-- Unassigned option -->
+              <button
+                @click="assign(null)"
+                class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-forge-700/50 transition-colors cursor-pointer"
+                :class="!card.assignee ? 'bg-forge-700/30' : ''"
+              >
+                <span class="text-sm text-forge-400">Unassigned</span>
+              </button>
+
+              <div class="h-px bg-forge-700/50"></div>
+
+              <button
+                v-for="member in boardMembers"
+                :key="member.uid"
+                @click="assign(member)"
+                class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-forge-700/50 transition-colors cursor-pointer"
+                :class="card.assignee?.uid === member.uid ? 'bg-forge-700/30' : ''"
+              >
+                <div v-if="member.photo" class="w-6 h-6 rounded-full overflow-hidden bg-forge-700 shrink-0">
+                  <img :src="member.photo" class="w-full h-full object-cover" />
+                </div>
+                <div v-else class="w-6 h-6 rounded-full bg-forge-700 flex items-center justify-center shrink-0">
+                  <span class="text-[10px] font-bold text-forge-300">{{ (member.name || '?').charAt(0).toUpperCase() }}</span>
+                </div>
+                <span class="text-sm text-forge-100">{{ member.name }}</span>
+                <svg v-if="card.assignee?.uid === member.uid" class="w-4 h-4 text-ember ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </button>
