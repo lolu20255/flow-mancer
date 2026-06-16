@@ -1,0 +1,55 @@
+rules_version = '2';
+
+// Flowmancer Firestore security rules.
+//
+// IMPORTANT: there is no catch-all `match /{document=**} { allow ... if true }`
+// here on purpose. That rule (Firebase "test mode" default) makes the entire
+// database public. Every collection below is scoped to its owner/members.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Boards: readable by any member; mutable by owner/editor; deletable by owner.
+    match /boards/{boardId} {
+      allow read: if request.auth != null
+                    && (request.auth.uid == resource.data.userId
+                        || request.auth.uid in resource.data.members);
+      allow create: if request.auth.uid == request.resource.data.userId
+                      && request.auth.uid in request.resource.data.members;
+      allow update: if request.auth.uid in resource.data.members
+                      && (resource.data.roles[request.auth.uid] in ['owner', 'editor']
+                          || request.auth.uid == resource.data.userId);
+      allow delete: if request.auth.uid == resource.data.userId;
+    }
+
+    // Projects: private to their owner (queried with where userId == uid).
+    match /projects/{projectId} {
+      allow read: if request.auth != null
+                    && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null
+                      && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null
+                              && request.auth.uid == resource.data.userId;
+    }
+
+    // User profiles: readable by any signed-in user (needed to render member
+    // avatars and the share-board search); writable only by the user themself.
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == uid;
+    }
+
+    // API keys for the MCP server. Server-only via the Admin SDK, which bypasses
+    // these rules. No browser client may ever read key hashes or write keys.
+    match /apiKeys/{id} {
+      allow read, write: if false;
+    }
+
+    // Agent presence for the agents monitor. The web app reads its owner's
+    // sessions live; only the Admin SDK (via agent hooks) ever writes them.
+    match /agentSessions/{id} {
+      allow read: if request.auth != null
+                    && request.auth.uid == resource.data.userId;
+      allow write: if false;
+    }
+  }
+}

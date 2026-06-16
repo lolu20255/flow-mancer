@@ -149,3 +149,87 @@ body::before {
 .animate-scale-in {
   animation: scale-in 0.2s ease-out both;
 }
+
+/* ── Agent working: cyberpunk active card ── */
+@property --agent-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.agent-card-active {
+  animation: agent-glow-pulse 3.2s ease-in-out infinite;
+}
+
+/* Orbiting neon border */
+.agent-card-active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--agent-angle),
+    transparent 0deg,
+    #34d399 40deg,
+    #22d3ee 95deg,
+    #a855f7 140deg,
+    transparent 190deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: agent-border-spin 3.2s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Drifting scanline sweep */
+.agent-card-active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(34, 211, 238, 0.08) 46%,
+    rgba(52, 211, 153, 0.14) 50%,
+    rgba(34, 211, 238, 0.08) 54%,
+    transparent 100%
+  );
+  background-size: 100% 220%;
+  background-repeat: no-repeat;
+  animation: agent-scanline 2.6s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes agent-border-spin {
+  to { --agent-angle: 360deg; }
+}
+
+@keyframes agent-scanline {
+  0% { background-position: 0 -120%; }
+  100% { background-position: 0 120%; }
+}
+
+@keyframes agent-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.10), 0 0 22px -8px rgba(52, 211, 153, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.22), 0 0 34px -6px rgba(34, 211, 238, 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-card-active,
+  .agent-card-active::before,
+  .agent-card-active::after {
+    animation: none;
+  }
+}

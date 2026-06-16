@@ -1,0 +1,22 @@
+{
+  "name": "flowmancer-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server exposing Flowmancer boards/tickets to AI models via the Firebase Admin SDK",
+  "bin": {
+    "flowmancer-mcp": "src/server.js",
+    "flowmancer-agent": "scripts/agent-hook.js"
+  },
+  "scripts": {
+    "start": "node --env-file=../.env src/server.js",
+    "create-key": "node --env-file=../.env scripts/create-api-key.js",
+    "revoke-key": "node --env-file=../.env scripts/revoke-api-key.js",
+    "agent": "node scripts/agent-hook.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "firebase-admin": "^12.7.0",
+    "zod": "^3.23.8"
+  }
+}
