@@ -141,16 +141,18 @@ server. When the agent finishes, the hook clears the record and the card
 disappears.
 
 ### 1. Tell each repo which project it belongs to
-Drop a `.flowmancer` file at the root of every repo you work in (see
-`.flowmancer.example`):
+Drop a `.flowmancer` file at the root of every repo you work in. Use
+`projectId` (from `list_projects`) or a `project` name:
 
 ```json
 { "projectId": "w7Xk3x4nALxfKI2aPYny" }
 ```
+```json
+{ "project": "ReadLens" }
+```
 
-Use `projectId` (from `list_projects`) or a `"project": "ReadLens"` name. The
-hook searches upward from the working directory, so a file at the repo root
-covers all subdirectories.
+The hook searches upward from the working directory, so a file at the repo root
+covers all subdirectories. A repo with no `.flowmancer` is simply not tracked.
 
 ### 2. Wire the hooks
 The CLI takes one subcommand and reads the hook's JSON from stdin:
