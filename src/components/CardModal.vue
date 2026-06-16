@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useBoardStore } from '../stores/board.js'
 import { useProjectStore } from '../stores/projects.js'
 import { useUsersStore } from '../stores/users.js'
@@ -45,6 +45,16 @@ const title = ref(props.card.title)
 const description = ref(props.card.description || '')
 const newLabel = ref('')
 const titleInput = ref(null)
+const descInput = ref(null)
+
+const MAX_DESCRIPTION_HEIGHT = 400
+
+function autoResizeDescription() {
+  const el = descInput.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${Math.min(el.scrollHeight, MAX_DESCRIPTION_HEIGHT)}px`
+}
 const uploading = ref(false)
 const fileInput = ref(null)
 const showProjectDropdown = ref(false)
@@ -96,6 +106,7 @@ onMounted(() => {
   titleInput.value?.focus()
   titleInput.value?.select()
   usersStore.ensureLoaded()
+  nextTick(autoResizeDescription)
 })
 
 function save() {
@@ -169,7 +180,7 @@ function formatDate(ts) {
   <Teleport to="body">
     <div class="fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" @click="emit('close')"></div>
-      <div class="relative bg-forge-900 border border-forge-700/50 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/40 animate-scale-in">
+      <div class="relative bg-forge-900 border border-forge-700/50 rounded-2xl p-6 w-full max-w-lg lg:max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/40 animate-scale-in">
         <!-- Color accent bar -->
         <div class="absolute top-0 left-6 right-6 h-0.5 rounded-b" :style="{ backgroundColor: activeColumnColor }"></div>
 
@@ -229,11 +240,13 @@ function formatDate(ts) {
         <div class="mb-4">
           <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Description</label>
           <textarea
+            ref="descInput"
             v-model="description"
             rows="3"
             placeholder="Add details..."
             :readonly="!canEdit"
-            class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-forge-50 placeholder-forge-500 resize-none focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/25 transition-all read-only:opacity-70"
+            @input="autoResizeDescription"
+            class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-forge-50 placeholder-forge-500 resize-y overflow-y-auto focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/25 transition-all read-only:opacity-70"
           ></textarea>
         </div>
 

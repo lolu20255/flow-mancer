@@ -6,6 +6,7 @@ import { useProjectStore } from '../stores/projects.js'
 import { useAuthStore } from '../stores/auth.js'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import ProjectModal from '../components/ProjectModal.vue'
+import AgentMonitor from '../components/AgentMonitor.vue'
 
 const store = useBoardStore()
 const projectStore = useProjectStore()
@@ -66,6 +67,21 @@ function openEditProject(project) {
 function closeProjectModal() {
   showProjectModal.value = false
   editingProject.value = null
+}
+
+// Copy a project id (for pasting into a repo's `.flowmancer` file).
+const copiedId = ref(null)
+let copyTimer = null
+
+async function copyProjectId(project) {
+  try {
+    await navigator.clipboard.writeText(project.id)
+    copiedId.value = project.id
+    clearTimeout(copyTimer)
+    copyTimer = setTimeout(() => { copiedId.value = null }, 1500)
+  } catch (err) {
+    console.error('Clipboard copy failed:', err)
+  }
 }
 </script>
 
@@ -150,6 +166,9 @@ function closeProjectModal() {
         </div>
 
         <template v-else>
+          <!-- Agents Monitor -->
+          <AgentMonitor />
+
           <!-- Projects Section -->
           <div class="mb-10">
             <div class="flex items-center justify-between mb-4">
@@ -179,36 +198,55 @@ function closeProjectModal() {
               <div
                 v-for="(project, i) in projectStore.projects"
                 :key="project.id"
-                class="group flex items-center gap-2.5 bg-forge-900 border border-forge-800/60 rounded-lg px-4 py-2.5 transition-all duration-200 hover:border-forge-600/60 animate-fade-in-up"
+                class="group flex items-start gap-2.5 bg-forge-900 border border-forge-800/60 rounded-lg px-4 py-2.5 transition-all duration-200 hover:border-forge-600/60 animate-fade-in-up"
                 :style="{ animationDelay: `${i * 40}ms` }"
               >
                 <!-- Color dot -->
                 <div
-                  class="w-2.5 h-2.5 rounded-full shrink-0"
+                  class="w-2.5 h-2.5 rounded-full shrink-0 mt-1.5"
                   :style="{ backgroundColor: project.color }"
                 ></div>
-                <span class="text-sm">{{ project.emoji }}</span>
-                <span class="text-sm font-medium text-forge-100">{{ project.name }}</span>
+                <span class="text-sm leading-5">{{ project.emoji }}</span>
 
-                <!-- Edit -->
-                <button
-                  @click="openEditProject(project)"
-                  class="opacity-0 group-hover:opacity-100 p-1 rounded text-forge-500 hover:text-forge-200 transition-all cursor-pointer"
-                >
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                </button>
+                <div class="flex flex-col min-w-0">
+                  <span class="text-sm font-medium text-forge-100 leading-5">{{ project.name }}</span>
 
-                <!-- Delete -->
-                <button
-                  @click="projectStore.deleteProject(project.id)"
-                  class="opacity-0 group-hover:opacity-100 p-1 rounded text-forge-500 hover:text-red-400 transition-all cursor-pointer"
-                >
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                  <!-- Project id + copy action (paste into a repo's .flowmancer) -->
+                  <button
+                    @click="copyProjectId(project)"
+                    :title="copiedId === project.id ? 'Copied!' : 'Copy project id'"
+                    class="mt-0.5 flex items-center gap-1 text-[10px] font-mono transition-colors cursor-pointer"
+                    :class="copiedId === project.id ? 'text-emerald-400' : 'text-forge-500 hover:text-forge-300'"
+                  >
+                    <svg v-if="copiedId === project.id" class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <svg v-else class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span class="truncate">{{ project.id }}</span>
+                  </button>
+                </div>
+
+                <!-- Edit + Delete -->
+                <div class="flex items-center gap-0.5 ml-2">
+                  <button
+                    @click="openEditProject(project)"
+                    class="opacity-0 group-hover:opacity-100 p-1 rounded text-forge-500 hover:text-forge-200 transition-all cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                  <button
+                    @click="projectStore.deleteProject(project.id)"
+                    class="opacity-0 group-hover:opacity-100 p-1 rounded text-forge-500 hover:text-red-400 transition-all cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -11,7 +11,26 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# Secrets & credentials (public repo: never commit these)
 .env
+.env.*
+!.env.example
+!.env.*.example
+service-account.json
+*service-account*.json
+*serviceAccount*.json
+*-key.json
+*credentials*.json
+*.pem
+*.key
+.flowmancer
+!.flowmancer.example
+
+# Backups / local copies of live config
+*.live-backup
+*.backup
+*.bak
 
 # Editor directories and files
 .vscode/*

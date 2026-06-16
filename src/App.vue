@@ -6,6 +6,7 @@ import { useBoardStore } from './stores/board.js'
 import { useProjectStore } from './stores/projects.js'
 import { useAuthStore } from './stores/auth.js'
 import { useUsersStore } from './stores/users.js'
+import { useAgentStore } from './stores/agents.js'
 
 useThemeStore()
 
@@ -13,6 +14,7 @@ const authStore = useAuthStore()
 const boardStore = useBoardStore()
 const projectStore = useProjectStore()
 const usersStore = useUsersStore()
+const agentStore = useAgentStore()
 
 // Start/stop Firestore listeners when auth state changes
 watch(() => authStore.isAuthenticated, async (authed) => {
@@ -22,9 +24,11 @@ watch(() => authStore.isAuthenticated, async (authed) => {
     await boardStore.backfillLegacyBoards()
     boardStore.init()
     projectStore.init()
+    agentStore.init()
   } else {
     boardStore.cleanup()
     projectStore.cleanup()
+    agentStore.cleanup()
     usersStore.reset()
   }
 }, { immediate: true })
@@ -32,6 +36,7 @@ watch(() => authStore.isAuthenticated, async (authed) => {
 onUnmounted(() => {
   boardStore.cleanup()
   projectStore.cleanup()
+  agentStore.cleanup()
 })
 </script>
 

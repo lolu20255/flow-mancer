@@ -1,0 +1,5 @@
+{
+  "_comment": "Copy this to a `.flowmancer` file at the root of each repo you work in. It tells the agent hooks which Flowmancer project the repo belongs to, so the agents monitor can group sessions. Use projectId (from list_projects) OR project name.",
+  "projectId": "w7Xk3x4nALxfKI2aPYny",
+  "project": "ReadLens"
+}

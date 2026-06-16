@@ -9,7 +9,10 @@ Flowmancer (formerly Vibe Board) is an open-source kanban board app. It's a Trel
 - **Owner**: Mario Diaz (@lolu20255)
 
 ## Rules
-- Never run any git commands
+- Git commands are allowed (commit, push, etc.). This is a PUBLIC repo: before
+  any `git add`, verify secrets stay ignored (`.env`, `mcp-server/service-account.json`,
+  `.flowmancer`, `*.live-backup`). Prefer staging specific files over `git add -A`.
+  Only commit or push when the user asks.
 
 ## Session Memory
 - At the start of every new session, read all files in `docs/memories/` to recover
