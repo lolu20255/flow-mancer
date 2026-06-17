@@ -82,12 +82,15 @@ export async function startAgentSession(ctx, args) {
 }
 
 // Refresh the heartbeat without resurrecting a session that already stopped.
+// A heartbeat means the agent is actively working, so this also clears any
+// prior "waiting for input" state: approving a permission prompt resumes the
+// agent (the next tool runs), flipping the card from amber back to green.
 export async function beatAgentSession(ctx, args) {
   const { sessionId, agent } = requireSession(args)
   const db = getDb()
   const ref = db.collection(AGENT_SESSIONS_COL).doc(sessionDocId(agent, sessionId))
   try {
-    await ref.update({ updatedAt: Date.now() })
+    await ref.update({ status: 'working', waitReason: null, updatedAt: Date.now() })
     return { id: ref.id, beat: true }
   } catch {
     // Doc is gone (session already stopped). Nothing to heartbeat.
