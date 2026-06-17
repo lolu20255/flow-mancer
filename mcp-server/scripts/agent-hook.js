@@ -10,6 +10,7 @@
 // Usage (the subcommand is the first arg):
 //   node agent-hook.js start   # agent began processing a prompt
 //   node agent-hook.js beat    # heartbeat (throttled); keeps the card "alive"
+//                              # and clears a "waiting" card once work resumes
 //   node agent-hook.js wait    # agent is blocked waiting for user input/approval
 //   node agent-hook.js stop    # agent finished; clears the card
 //
@@ -72,7 +73,9 @@ async function dispatch(command, agentService, ctx, ctxInput) {
   }
   if (command === 'wait') {
     await agentService.waitAgentSession(ctx, ctxInput)
-    markBeat(ctxInput)
+    // Flag the local cache so the next tool-use heartbeat bypasses the throttle
+    // and immediately clears this "waiting" state once the user approves.
+    markBeat(ctxInput, { waiting: true })
     return
   }
   // start
@@ -149,12 +152,14 @@ async function resolveContext(resolveApiKey) {
 // ---- Heartbeat throttle (bounds writes to ~1 per session per throttle win) --
 
 function throttledRecently(ctxInput) {
-  const last = readJsonSafe(beatPath(ctxInput))?.at || 0
-  return Date.now() - last < HEARTBEAT_THROTTLE_MS
+  const cache = readJsonSafe(beatPath(ctxInput))
+  // A session leaving "waiting" must clear immediately, never throttled.
+  if (cache?.waiting) return false
+  return Date.now() - (cache?.at || 0) < HEARTBEAT_THROTTLE_MS
 }
 
-function markBeat(ctxInput) {
-  writeJsonSafe(beatPath(ctxInput), { at: Date.now() })
+function markBeat(ctxInput, extra = {}) {
+  writeJsonSafe(beatPath(ctxInput), { at: Date.now(), ...extra })
 }
 
 function beatPath(ctxInput) {
