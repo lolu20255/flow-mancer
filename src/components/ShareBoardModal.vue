@@ -68,10 +68,10 @@ async function remove(uid) {
   <Teleport to="body">
     <div class="fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" @click="emit('close')"></div>
-      <div class="relative bg-forge-900 border border-forge-700/50 rounded-2xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl shadow-black/40 animate-scale-in">
+      <div class="surface shadow-soft-lg relative rounded-2xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto animate-scale-in">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-display text-lg font-medium text-forge-50">Share "{{ board.name }}"</h2>
-          <button @click="emit('close')" class="p-1.5 rounded-md text-forge-400 hover:text-forge-100 hover:bg-forge-800 cursor-pointer transition-colors">
+          <button @click="emit('close')" class="p-1.5 rounded-lg text-forge-400 hover:text-forge-100 hover:bg-forge-800 cursor-pointer transition-colors">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -80,18 +80,18 @@ async function remove(uid) {
 
         <!-- Invite input (owner only) -->
         <div v-if="isOwner" class="mb-5 relative">
-          <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Invite by name or email</label>
+          <label class="section-label block mb-2">Invite by name or email</label>
           <input
             v-model="query"
             @focus="showSuggestions = true"
             @blur="hideSuggestionsSoon"
             type="text"
             placeholder="Search users..."
-            class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-forge-50 placeholder-forge-500 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/25 transition-all"
+            class="input-field text-sm"
           />
           <div
             v-if="showSuggestions && suggestions.length"
-            class="absolute top-full left-0 right-0 mt-1 z-20 max-h-56 overflow-y-auto bg-forge-800 border border-forge-700/50 rounded-lg shadow-xl shadow-black/30 animate-scale-in"
+            class="absolute top-full left-0 right-0 mt-1 z-20 max-h-56 overflow-y-auto bg-forge-800 border border-forge-700/50 rounded-xl shadow-soft-lg animate-scale-in"
           >
             <button
               v-for="user in suggestions"
@@ -114,7 +114,7 @@ async function remove(uid) {
           </div>
           <div
             v-else-if="showSuggestions && query.trim() && !suggestions.length"
-            class="absolute top-full left-0 right-0 mt-1 z-20 px-4 py-3 bg-forge-800 border border-forge-700/50 rounded-lg shadow-xl text-sm text-forge-500"
+            class="absolute top-full left-0 right-0 mt-1 z-20 px-4 py-3 bg-forge-800 border border-forge-700/50 rounded-xl shadow-soft-lg text-sm text-forge-500"
           >
             No matching users.
           </div>
@@ -122,12 +122,12 @@ async function remove(uid) {
 
         <!-- Member list -->
         <div>
-          <div class="text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Members ({{ members.length }})</div>
+          <div class="section-label mb-2">Members ({{ members.length }})</div>
           <div class="flex flex-col gap-1">
             <div
               v-for="m in members"
               :key="m.uid"
-              class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-forge-800/50 transition-colors"
+              class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-forge-800/50 transition-colors"
             >
               <div v-if="m.photo" class="w-8 h-8 rounded-full overflow-hidden bg-forge-700 shrink-0">
                 <img :src="m.photo" class="w-full h-full object-cover" />
@@ -149,7 +149,7 @@ async function remove(uid) {
                   v-if="isOwner"
                   :value="m.role"
                   @change="changeRole(m.uid, $event.target.value)"
-                  class="bg-forge-800 border border-forge-700/50 rounded-md px-2 py-1 text-xs text-forge-100 focus:outline-none focus:border-ember/40 cursor-pointer"
+                  class="input-field w-auto px-2 py-1 text-xs cursor-pointer"
                 >
                   <option value="editor">Editor</option>
                   <option value="viewer">Viewer</option>

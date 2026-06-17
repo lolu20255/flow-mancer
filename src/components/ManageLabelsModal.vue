@@ -24,7 +24,7 @@ const editInput = ref(null)
 const openColorFor = ref(null)
 
 function colorOf(label) {
-  return props.board.labelColors?.[label] || '#f97316'
+  return props.board.labelColors?.[label] || '#6366f1'
 }
 
 function startEdit(label) {
@@ -58,10 +58,10 @@ async function pickColor(label, color) {
   <Teleport to="body">
     <div class="fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" @click="emit('close')"></div>
-      <div class="relative bg-forge-900 border border-forge-700/50 rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto shadow-2xl shadow-black/40 animate-scale-in">
+      <div class="surface shadow-soft-lg relative rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto animate-scale-in">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-display text-lg font-medium text-forge-50">Manage Labels</h2>
-          <button @click="emit('close')" class="p-1.5 rounded-md text-forge-400 hover:text-forge-100 hover:bg-forge-800 cursor-pointer transition-colors">
+          <button @click="emit('close')" class="p-1.5 rounded-lg text-forge-400 hover:text-forge-100 hover:bg-forge-800 cursor-pointer transition-colors">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -76,7 +76,7 @@ async function pickColor(label, color) {
           <div
             v-for="label in labels"
             :key="label"
-            class="group flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-forge-800/60 transition-colors"
+            class="group flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-forge-800/60 transition-colors"
           >
             <!-- Color dot + picker -->
             <div class="relative shrink-0">
@@ -88,7 +88,7 @@ async function pickColor(label, color) {
               ></button>
               <div
                 v-if="openColorFor === label"
-                class="absolute top-full left-0 mt-1 z-30 p-2 w-44 bg-forge-800 border border-forge-700/60 rounded-lg shadow-xl flex flex-wrap gap-1.5 animate-scale-in"
+                class="absolute top-full left-0 mt-1 z-30 p-2 w-44 bg-forge-800 border border-forge-700/60 rounded-xl shadow-soft-lg flex flex-wrap gap-1.5 animate-scale-in"
               >
                 <button
                   v-for="c in COLUMN_COLORS"
@@ -109,7 +109,7 @@ async function pickColor(label, color) {
               @keydown.escape="cancelEdit"
               @blur="commitEdit(label)"
               type="text"
-              class="flex-1 bg-forge-800 border border-ember/40 rounded-md px-2 py-1 text-sm text-forge-50 focus:outline-none"
+              class="input-field flex-1 px-2 py-1 text-sm"
             />
             <span
               v-else

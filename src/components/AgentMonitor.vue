@@ -35,7 +35,7 @@ const summary = computed(() => {
 
 const statusDotClass = computed(() => {
   if (agentStore.workingCount > 0) return 'bg-emerald-400 animate-pulse'
-  if (agentStore.waitingCount > 0) return 'bg-amber-400 animate-pulse'
+  if (agentStore.waitingCount > 0) return 'wait-dot animate-pulse'
   return 'bg-forge-600'
 })
 </script>
@@ -43,7 +43,7 @@ const statusDotClass = computed(() => {
 <template>
   <div v-if="agentStore.hasSessions" class="mb-10">
     <div class="flex items-center justify-between mb-4">
-      <p class="text-forge-400 text-sm font-medium uppercase tracking-widest">Agents</p>
+      <p class="section-label">Agents</p>
       <span class="flex items-center gap-2 text-xs text-forge-400">
         <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass"></span>
         {{ summary }}
@@ -62,7 +62,7 @@ const statusDotClass = computed(() => {
         :class="group.working > 0
           ? 'agent-card-active border-emerald-500/20'
           : group.waiting > 0
-            ? 'agent-card-waiting border-amber-400/30'
+            ? 'agent-card-waiting wait-border'
             : 'border-forge-800/60'"
        >
         <div class="relative z-10">
@@ -81,15 +81,15 @@ const statusDotClass = computed(() => {
           </span>
           <span
             v-else-if="group.waiting > 0"
-            class="flex items-center gap-1 text-[10px] uppercase tracking-wider text-amber-300 px-1.5 py-0.5 rounded bg-amber-400/10 border border-amber-400/30 shrink-0"
+            class="flex items-center gap-1 text-[10px] uppercase tracking-wider wait-text px-1.5 py-0.5 rounded wait-soft border wait-border shrink-0"
             title="Waiting for your input"
           >
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+            <span class="w-1.5 h-1.5 rounded-full wait-dot animate-pulse"></span>
             waiting
           </span>
           <span
             v-else
-            class="text-[10px] uppercase tracking-wider text-amber-400/80 px-1.5 py-0.5 rounded bg-amber-400/10 border border-amber-400/20 shrink-0"
+            class="text-[10px] uppercase tracking-wider wait-text px-1.5 py-0.5 rounded wait-soft border wait-border shrink-0"
             title="No recent heartbeat; agent may have stopped"
           >
             stale
@@ -107,16 +107,16 @@ const statusDotClass = computed(() => {
             <div class="min-w-0 flex-1">
               <p
                 class="text-xs truncate"
-                :class="session.waiting ? 'text-amber-200' : 'text-forge-300'"
+                :class="session.waiting ? 'wait-text' : 'text-forge-300'"
                 :title="session.task || ''"
               >
                 {{ session.task || (session.waiting ? 'Waiting for you…' : 'Working…') }}
               </p>
               <p
                 v-if="session.waiting"
-                class="text-[10px] text-amber-300 font-medium uppercase tracking-wider flex items-center gap-1"
+                class="text-[10px] wait-text font-medium uppercase tracking-wider flex items-center gap-1"
               >
-                <span class="w-1 h-1 rounded-full bg-amber-400 animate-pulse"></span>
+                <span class="w-1 h-1 rounded-full wait-dot animate-pulse"></span>
                 {{ waitLabel(session) }}
               </p>
               <p class="text-[10px] text-forge-500 truncate">

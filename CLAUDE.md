@@ -63,8 +63,9 @@ Flowmancer (formerly Vibe Board) is an open-source kanban board app. It's a Trel
 
 ### Key Design Decisions
 - **Fonts**: Geist (unified display + body sans-serif) via Google Fonts. Base size is bumped to 17px (`html { font-size }`); `.font-display` headings use tighter `-0.02em` tracking. (Previously Fraunces serif + Outfit.)
-- **Colors**: Custom `forge-*` palette (dark) with pastel overrides in light mode. Accent: `ember` (#f97316)
+- **Colors**: Custom `forge-*` palette (deep cool-ink charcoals in dark, cool-slate in light). Brand accent is **indigo** (`#6366f1` dark / `#4f46e5` light), exposed via the `--color-ember*` tokens (token name kept as `ember` for compatibility; it is no longer orange). Use `text-ember`/`bg-ember`/the `.btn-primary` gradient for the accent.
 - **Grain overlay**: SVG noise texture on `body::before` at low opacity
+- **Design-system classes** (in `style.css`, theme-adaptive): prefer these over ad-hoc Tailwind strings — `.btn-primary` (ember-gradient CTA), `.btn-secondary`, `.input-field`, `.surface` / `.surface-interactive` (cards, rounded-2xl + soft shadow + hover lift), `.shadow-soft` / `.shadow-soft-lg`, `.section-label`, `.chip-mono`, `.focus-ring`. Elevation via `--fm-shadow*` tokens; ember gradient via `--fm-ember-grad`. One ember primary CTA per view; secondary actions stay neutral.
 - **Animations**: `fade-in-up`, `fade-in`, `scale-in` keyframes with staggered delays
 
 ## File Structure

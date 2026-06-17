@@ -3,38 +3,64 @@
 @theme {
   --font-display: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-body: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --color-forge-950: #08080a;
-  --color-forge-900: #0f0f13;
-  --color-forge-850: #141419;
-  --color-forge-800: #1a1a22;
-  --color-forge-700: #24242f;
-  --color-forge-600: #33334a;
-  --color-forge-500: #4a4a6a;
-  --color-forge-400: #6b6b8a;
-  --color-forge-300: #9090a8;
-  --color-forge-200: #b8b8cc;
-  --color-forge-100: #e0e0ea;
-  --color-forge-50: #f2f2f6;
-  --color-ember: #f97316;
-  --color-ember-glow: #fb923c;
+  /* Dark "Forge": deep cool-ink charcoals (subtle blue undertone, never pure
+     black) with clear separation between the app bg (950) and card surfaces
+     (900) so cards read as elevated. Inspired by Linear / GitHub dark. */
+  --color-forge-950: #0b0d11;
+  --color-forge-900: #13151c;
+  --color-forge-850: #181b23;
+  --color-forge-800: #1f232c;
+  --color-forge-700: #2c313c;
+  --color-forge-600: #3f4552;
+  --color-forge-500: #5b6271;
+  --color-forge-400: #888fa0;
+  --color-forge-300: #aab0bf;
+  --color-forge-200: #cacfda;
+  --color-forge-100: #e8eaf0;
+  --color-forge-50: #f5f6f9;
+  /* Brand accent (token kept named "ember" for compatibility; now indigo). */
+  --color-ember: #6366f1;
+  --color-ember-glow: #818cf8;
+  --color-ember-deep: #4f46e5;
 }
 
-/* ── Light / Pastel theme overrides ── */
+/* ── Light theme: modern cool-neutral (soft slate) so the warm ember pops ── */
 :root[data-theme="light"] {
-  --color-forge-950: #f7f5f0;
+  --color-forge-950: #f1f3f7;
   --color-forge-900: #ffffff;
-  --color-forge-850: #faf8f4;
-  --color-forge-800: #ece8df;
-  --color-forge-700: #dbd5c9;
-  --color-forge-600: #b8b0a0;
-  --color-forge-500: #948c7e;
-  --color-forge-400: #706a5e;
-  --color-forge-300: #504b42;
-  --color-forge-200: #36322c;
-  --color-forge-100: #1e1c18;
-  --color-forge-50: #0f0e0c;
-  --color-ember: #e05d00;
-  --color-ember-glow: #c44e00;
+  --color-forge-850: #f7f8fb;
+  --color-forge-800: #e4e7ee;
+  --color-forge-700: #d0d5df;
+  --color-forge-600: #9aa1b0;
+  --color-forge-500: #757d8c;
+  --color-forge-400: #565d6b;
+  --color-forge-300: #3b414d;
+  --color-forge-200: #272b33;
+  --color-forge-100: #161920;
+  --color-forge-50: #0b0d11;
+  --color-ember: #4f46e5;
+  --color-ember-glow: #6366f1;
+  --color-ember-deep: #4338ca;
+}
+
+/* Elevation + accent tokens (per-theme). Used by the .surface/.btn helpers and
+   anywhere a real sense of depth is needed. */
+:root {
+  --fm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --fm-shadow: 0 2px 10px -3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --fm-shadow-lg: 0 16px 40px -12px rgba(0, 0, 0, 0.6), 0 4px 10px rgba(0, 0, 0, 0.35);
+  --fm-ember-grad: linear-gradient(135deg, var(--color-ember-glow), var(--color-ember-deep));
+  --fm-ember-ring: color-mix(in srgb, var(--color-ember) 45%, transparent);
+  /* Agent "waiting" accent: bright amber on dark. */
+  --fm-wait: #fbbf24;
+}
+
+:root[data-theme="light"] {
+  --fm-shadow-sm: 0 1px 2px rgba(28, 33, 45, 0.07);
+  --fm-shadow: 0 1px 3px rgba(28, 33, 45, 0.07), 0 6px 18px -6px rgba(28, 33, 45, 0.12);
+  --fm-shadow-lg: 0 14px 34px -10px rgba(28, 33, 45, 0.18), 0 4px 10px rgba(28, 33, 45, 0.08);
+  /* Deeper amber so "waiting" stays legible on the white light surface. */
+  --fm-wait: #b45309;
 }
 
 [data-theme="light"] body::before {
@@ -161,6 +187,128 @@ body::before {
 .animate-scale-in {
   animation: scale-in 0.2s ease-out both;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   Design system: reusable surface / button / input / chip helpers.
+   Components opt in by adding these classes; they read the themed
+   color + elevation tokens above, so they adapt to light/dark.
+   ════════════════════════════════════════════════════════════════ */
+
+/* Soft elevation utilities */
+.shadow-soft { box-shadow: var(--fm-shadow); }
+.shadow-soft-lg { box-shadow: var(--fm-shadow-lg); }
+
+/* Card surface */
+.surface {
+  background-color: var(--color-forge-900);
+  border: 1px solid color-mix(in srgb, var(--color-forge-700) 55%, transparent);
+  border-radius: 1rem;
+  box-shadow: var(--fm-shadow-sm);
+}
+
+/* Interactive card: lifts and brightens on hover */
+.surface-interactive {
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.22s ease, border-color 0.22s ease, background-color 0.22s ease;
+}
+.surface-interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--fm-shadow-lg);
+  border-color: color-mix(in srgb, var(--color-forge-600) 80%, transparent);
+}
+.surface-interactive:active { transform: translateY(-1px); }
+
+/* Primary action: ember gradient with a soft glow and press feedback */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.05rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background-image: var(--fm-ember-grad);
+  border-radius: 0.7rem;
+  box-shadow: 0 2px 10px -2px var(--fm-ember-ring);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.btn-primary:hover { filter: brightness(1.06) saturate(1.05); box-shadow: 0 8px 22px -6px var(--fm-ember-ring); }
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; filter: none; transform: none; }
+
+/* Secondary action: tinted neutral surface */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.05rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-forge-100);
+  background-color: var(--color-forge-800);
+  border: 1px solid color-mix(in srgb, var(--color-forge-700) 60%, transparent);
+  border-radius: 0.7rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+.btn-secondary:hover { background-color: var(--color-forge-700); border-color: var(--color-forge-600); }
+.btn-secondary:active { transform: scale(0.97); }
+
+/* Text input */
+.input-field {
+  width: 100%;
+  background-color: var(--color-forge-800);
+  border: 1px solid color-mix(in srgb, var(--color-forge-700) 70%, transparent);
+  border-radius: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  color: var(--color-forge-50);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-field::placeholder { color: var(--color-forge-500); }
+.input-field:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-ember) 55%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ember) 18%, transparent);
+}
+
+/* Monospace id pill (project ids, etc.) */
+.chip-mono {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.66rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.4rem;
+  background-color: color-mix(in srgb, var(--color-forge-700) 35%, transparent);
+  color: var(--color-forge-400);
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+/* Tiny section label (AGENTS / PROJECTS / BOARDS) */
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-forge-400);
+}
+
+/* Keyboard focus ring for interactive elements */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ember) 35%, transparent);
+}
+
+/* Theme-aware "waiting" amber (legible on both dark and light surfaces) */
+.wait-text { color: var(--fm-wait); }
+.wait-dot { background-color: var(--fm-wait); }
+.wait-soft { background-color: color-mix(in srgb, var(--fm-wait) 14%, transparent); }
+.wait-border { border-color: color-mix(in srgb, var(--fm-wait) 40%, transparent); }
 
 /* ── Agent working: cyberpunk active card ── */
 @property --agent-angle {

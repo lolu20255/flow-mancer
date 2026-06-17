@@ -56,6 +56,52 @@ function toggleFilter(projectId) {
   filterProjectIds.value = next
 }
 
+// Project filter dropdown (searchable multi-select; scales past a long row).
+// The panel is teleported to <body> with fixed positioning so it always sits
+// above the kanban columns (which create their own stacking contexts).
+const showProjectFilter = ref(false)
+const projectSearch = ref('')
+const projectFilterRef = ref(null)
+const projectPanelRef = ref(null)
+const filterMenuStyle = ref({})
+
+const filteredBoardProjects = computed(() => {
+  const q = projectSearch.value.trim().toLowerCase()
+  if (!q) return boardProjects.value
+  return boardProjects.value.filter(p => (p.name || '').toLowerCase().includes(q))
+})
+
+const selectedProjects = computed(() =>
+  boardProjects.value.filter(p => filterProjectIds.value.has(p.id))
+)
+
+function toggleProjectFilter() {
+  if (showProjectFilter.value) {
+    showProjectFilter.value = false
+    return
+  }
+  const rect = projectFilterRef.value?.getBoundingClientRect()
+  if (rect) {
+    filterMenuStyle.value = {
+      position: 'fixed',
+      top: `${rect.bottom + 8}px`,
+      left: `${rect.left}px`,
+    }
+  }
+  projectSearch.value = ''
+  showProjectFilter.value = true
+}
+
+function clearProjectFilter() {
+  filterProjectIds.value = new Set()
+}
+
+function onFilterPointerDown(e) {
+  if (projectFilterRef.value?.contains(e.target)) return
+  if (projectPanelRef.value?.contains(e.target)) return
+  showProjectFilter.value = false
+}
+
 function toggleLabelFilter(label) {
   const next = new Set(filterLabels.value)
   if (next.has(label)) next.delete(label)
@@ -113,9 +159,11 @@ const graceElapsed = ref(false)
 let graceTimer = null
 onMounted(() => {
   graceTimer = setTimeout(() => { graceElapsed.value = true }, 1500)
+  document.addEventListener('pointerdown', onFilterPointerDown)
 })
 onUnmounted(() => {
   if (graceTimer) clearTimeout(graceTimer)
+  document.removeEventListener('pointerdown', onFilterPointerDown)
 })
 
 const isLoading = computed(() => store.loading || !graceElapsed.value)
@@ -127,7 +175,7 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
     <header class="shrink-0 border-b border-forge-800/60 px-6 py-4">
       <div class="flex items-center gap-4">
         <button @click="goBack"
-          class="p-2 rounded-lg text-forge-400 hover:text-forge-100 hover:bg-forge-800 transition-all duration-200 cursor-pointer">
+          class="p-2 rounded-xl text-forge-400 hover:text-forge-100 hover:bg-forge-800 transition-all duration-200 cursor-pointer focus-ring">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
@@ -144,7 +192,7 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
             <path stroke-linecap="round" stroke-linejoin="round"
               d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
           </svg>
-          <span v-if="!canEdit && myRole" class="ml-2 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider bg-forge-800 text-forge-400 border border-forge-700/40">
+          <span v-if="!canEdit && myRole" class="ml-2 px-1.5 py-0.5 rounded-md text-[10px] uppercase tracking-wider bg-forge-800 text-forge-400 border border-forge-700/40">
             {{ myRole }}
           </span>
         </button>
@@ -156,7 +204,7 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
             <span>{{board.columns.reduce((sum, col) => sum + col.cards.length, 0)}} cards</span>
           </div>
           <button @click="showShareBoard = true"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-forge-200 hover:text-forge-50 bg-forge-800/60 hover:bg-forge-800 border border-forge-700/40 hover:border-forge-600/60 transition-all cursor-pointer">
+            class="btn-secondary text-sm py-1.5 focus-ring">
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
@@ -169,23 +217,60 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
     </header>
 
     <!-- Project Filter -->
-    <div v-if="boardProjects.length" class="shrink-0 px-8 pt-3 flex items-center gap-2 animate-fade-in">
-      <span class="text-[11px] font-medium uppercase tracking-widest text-forge-500 mr-1">Filter by Project</span>
-      <button v-for="project in boardProjects" :key="project.id" @click="toggleFilter(project.id)"
-        class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer border"
-        :class="filterProjectIds.has(project.id)
-          ? 'text-forge-50 border-transparent shadow-md'
-          : 'text-forge-400 border-forge-700/40 hover:text-forge-200 hover:border-forge-600/60 bg-forge-900/50'"
-        :style="filterProjectIds.has(project.id)
-          ? { backgroundColor: project.color + 'cc', boxShadow: `0 2px 8px ${project.color}30` }
-          : {}">
-        <div class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: project.color }"></div>
-        <span>{{ project.emoji }} {{ project.name }}</span>
-      </button>
-      <button v-if="filterProjectIds.size" @click="filterProjectIds = new Set()"
-        class="ml-1 p-1 rounded-full text-forge-500 hover:text-forge-300 hover:bg-forge-800/50 transition-colors cursor-pointer"
-        title="Clear filter">
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <div v-if="boardProjects.length" class="shrink-0 px-8 pt-3 flex items-center gap-2 flex-wrap animate-fade-in">
+      <span class="section-label mr-1">Filter by Project</span>
+
+      <!-- Dropdown trigger -->
+      <div ref="projectFilterRef">
+        <button @click="toggleProjectFilter"
+          class="flex items-center gap-2 pl-2.5 pr-2 py-1.5 rounded-xl text-xs font-medium border transition-all duration-200 cursor-pointer focus-ring"
+          :class="filterProjectIds.size
+            ? 'bg-ember/10 border-ember/40 text-forge-100'
+            : 'bg-forge-900 border-forge-700/50 text-forge-300 hover:border-forge-600/60'">
+          <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+          </svg>
+          <span>{{ filterProjectIds.size ? `${filterProjectIds.size} selected` : 'All projects' }}</span>
+          <svg class="w-3.5 h-3.5 shrink-0 transition-transform duration-200" :class="showProjectFilter ? 'rotate-180' : ''"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+
+      <Teleport to="body">
+        <div v-if="showProjectFilter" ref="projectPanelRef" :style="filterMenuStyle"
+          class="z-[100] w-72 bg-forge-900 border border-forge-700/50 rounded-xl shadow-soft-lg overflow-hidden animate-scale-in">
+          <div class="p-2 border-b border-forge-800/60">
+            <input v-model="projectSearch" type="text" placeholder="Search projects…"
+              class="input-field text-xs py-1.5" @keydown.escape="showProjectFilter = false" />
+          </div>
+          <div class="max-h-64 overflow-y-auto py-1">
+            <button v-for="project in filteredBoardProjects" :key="project.id" @click="toggleFilter(project.id)"
+              class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left hover:bg-forge-800/60 transition-colors cursor-pointer">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: project.color }"></span>
+              <span class="shrink-0">{{ project.emoji }}</span>
+              <span class="flex-1 truncate" :class="filterProjectIds.has(project.id) ? 'text-forge-50 font-medium' : 'text-forge-200'">{{ project.name }}</span>
+              <svg v-if="filterProjectIds.has(project.id)" class="w-4 h-4 text-ember shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+            <p v-if="!filteredBoardProjects.length" class="px-3 py-4 text-xs text-forge-500 text-center">No projects match.</p>
+          </div>
+          <button v-if="filterProjectIds.size" @click="clearProjectFilter"
+            class="w-full px-3 py-2 text-xs text-forge-400 hover:text-forge-100 hover:bg-forge-800/60 border-t border-forge-800/60 transition-colors cursor-pointer text-left">
+            Clear selection ({{ filterProjectIds.size }})
+          </button>
+        </div>
+      </Teleport>
+
+      <!-- Active selections as removable chips -->
+      <button v-for="project in selectedProjects" :key="project.id" @click="toggleFilter(project.id)"
+        class="flex items-center gap-1.5 pl-2 pr-1.5 py-1 rounded-full text-[11px] font-medium text-forge-50 cursor-pointer transition-transform duration-150 hover:scale-95"
+        :style="{ backgroundColor: project.color + 'dd', boxShadow: `0 2px 8px ${project.color}30` }"
+        title="Remove from filter">
+        <span class="truncate max-w-[10rem]">{{ project.emoji }} {{ project.name }}</span>
+        <svg class="w-3 h-3 opacity-80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
@@ -193,16 +278,16 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
 
     <!-- Label Filter -->
     <div v-if="boardLabels.length" class="shrink-0 px-8 pt-2 flex items-center gap-2 flex-wrap animate-fade-in">
-      <span class="text-[11px] font-medium uppercase tracking-widest text-forge-500 mr-1">Filter by Label</span>
+      <span class="section-label mr-1">Filter by Label</span>
       <button v-for="label in boardLabels" :key="label" @click="toggleLabelFilter(label)"
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer border"
         :class="filterLabels.has(label)
-          ? 'text-white border-transparent shadow-md'
+          ? 'text-forge-50 border-transparent shadow-soft'
           : 'text-forge-400 border-forge-700/40 hover:text-forge-200 hover:border-forge-600/60 bg-forge-900/50'"
         :style="filterLabels.has(label)
-          ? { backgroundColor: (board.labelColors?.[label] || '#f97316'), boxShadow: `0 2px 8px ${(board.labelColors?.[label] || '#f97316')}30` }
+          ? { backgroundColor: (board.labelColors?.[label] || '#6366f1'), boxShadow: `0 2px 8px ${(board.labelColors?.[label] || '#6366f1')}30` }
           : {}">
-        <div class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: board.labelColors?.[label] || '#f97316' }"></div>
+        <div class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: board.labelColors?.[label] || '#6366f1' }"></div>
         <span>{{ label }}</span>
       </button>
       <button v-if="canEdit" @click="showManageLabels = true"
@@ -252,9 +337,9 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
   </div>
 
   <div v-else class="h-full flex items-center justify-center bg-forge-950">
-    <div class="text-center">
-      <p class="text-forge-400 text-lg mb-4">Board not found</p>
-      <button @click="goBack" class="text-ember hover:text-ember-glow transition-colors cursor-pointer">
+    <div class="surface shadow-soft-lg px-8 py-7 text-center animate-scale-in">
+      <p class="text-forge-300 text-lg mb-5">Board not found</p>
+      <button @click="goBack" class="btn-primary focus-ring">
         Back to Dashboard
       </button>
     </div>

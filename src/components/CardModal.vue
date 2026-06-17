@@ -180,18 +180,18 @@ function formatDate(ts) {
   <Teleport to="body">
     <div class="fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" @click="emit('close')"></div>
-      <div class="relative bg-forge-900 border border-forge-700/50 rounded-2xl p-6 w-full max-w-lg lg:max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/40 animate-scale-in">
+      <div class="relative bg-forge-900 border border-forge-700/50 rounded-2xl p-6 w-full max-w-lg lg:max-w-3xl max-h-[90vh] overflow-y-auto shadow-soft-lg animate-scale-in">
         <!-- Color accent bar -->
         <div class="absolute top-0 left-6 right-6 h-0.5 rounded-b" :style="{ backgroundColor: activeColumnColor }"></div>
 
         <!-- Status / Column -->
         <div class="mb-4">
-          <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Status</label>
+          <label class="section-label block mb-2">Status</label>
           <div class="relative">
             <button
               @click="canEdit && (showStatusDropdown = !showStatusDropdown)"
               :disabled="!canEdit"
-              class="w-full flex items-center gap-2.5 bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-left transition-all"
+              class="w-full flex items-center gap-2.5 bg-forge-800 border border-forge-700/50 rounded-xl px-4 py-2.5 text-left transition-all duration-200"
               :class="[showStatusDropdown ? 'border-ember/50 ring-1 ring-ember/25' : '', canEdit ? 'cursor-pointer hover:border-forge-600/50' : 'cursor-default opacity-70']"
             >
               <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: activeColumnColor }"></span>
@@ -204,7 +204,7 @@ function formatDate(ts) {
             <!-- Dropdown -->
             <div
               v-if="showStatusDropdown"
-              class="absolute top-full left-0 right-0 mt-1 z-20 max-h-56 overflow-y-auto bg-forge-800 border border-forge-700/50 rounded-lg shadow-xl shadow-black/30 animate-scale-in"
+              class="absolute top-full left-0 right-0 mt-1 z-20 max-h-56 overflow-y-auto bg-forge-800 border border-forge-700/50 rounded-xl shadow-soft-lg animate-scale-in"
             >
               <button
                 v-for="col in boardColumns"
@@ -225,20 +225,20 @@ function formatDate(ts) {
 
         <!-- Title -->
         <div class="mb-4">
-          <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Title</label>
+          <label class="section-label block mb-2">Title</label>
           <input
             ref="titleInput"
             v-model="title"
             @keydown.enter.prevent="save"
             type="text"
             :readonly="!canEdit"
-            class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-forge-50 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/25 transition-all read-only:opacity-70"
+            class="input-field read-only:opacity-70"
           />
         </div>
 
         <!-- Description -->
         <div class="mb-4">
-          <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Description</label>
+          <label class="section-label block mb-2">Description</label>
           <textarea
             ref="descInput"
             v-model="description"
@@ -246,13 +246,13 @@ function formatDate(ts) {
             placeholder="Add details..."
             :readonly="!canEdit"
             @input="autoResizeDescription"
-            class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-forge-50 placeholder-forge-500 resize-y overflow-y-auto focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/25 transition-all read-only:opacity-70"
+            class="input-field resize-y overflow-y-auto read-only:opacity-70"
           ></textarea>
         </div>
 
         <!-- Labels -->
         <div class="mb-4">
-          <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Labels</label>
+          <label class="section-label block mb-2">Labels</label>
           <div class="flex flex-wrap gap-1.5 mb-2">
             <span
               v-for="label in card.labels"
@@ -277,11 +277,11 @@ function formatDate(ts) {
                 @blur="hideSuggestionsSoon"
                 type="text"
                 placeholder="Add label..."
-                class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-3 py-1.5 text-sm text-forge-100 placeholder-forge-500 focus:outline-none focus:border-ember/40"
+                class="input-field text-sm py-1.5"
               />
               <div
                 v-if="showLabelSuggestions && labelSuggestions.length"
-                class="absolute top-full left-0 right-0 mt-1 z-20 max-h-48 overflow-y-auto bg-forge-800 border border-forge-700/50 rounded-lg shadow-xl shadow-black/30 animate-scale-in"
+                class="absolute top-full left-0 right-0 mt-1 z-20 max-h-48 overflow-y-auto bg-forge-800 border border-forge-700/50 rounded-xl shadow-soft-lg animate-scale-in"
               >
                 <button
                   v-for="suggestion in labelSuggestions"
@@ -297,7 +297,7 @@ function formatDate(ts) {
             <button
               @click="addLabel()"
               :disabled="!newLabel.trim()"
-              class="px-3 py-1.5 text-xs text-ember hover:text-ember-glow disabled:opacity-40 font-medium transition-colors cursor-pointer disabled:cursor-not-allowed"
+              class="focus-ring rounded-lg px-3 py-1.5 text-xs text-ember hover:text-ember-glow disabled:opacity-40 font-medium transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
               Add
             </button>
@@ -306,12 +306,12 @@ function formatDate(ts) {
 
         <!-- Project -->
         <div class="mb-4">
-          <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Project</label>
+          <label class="section-label block mb-2">Project</label>
           <div class="relative">
             <button
               @click="canEdit && (showProjectDropdown = !showProjectDropdown)"
               :disabled="!canEdit"
-              class="w-full flex items-center gap-2.5 bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-left transition-all"
+              class="w-full flex items-center gap-2.5 bg-forge-800 border border-forge-700/50 rounded-xl px-4 py-2.5 text-left transition-all duration-200"
               :class="[showProjectDropdown ? 'border-ember/50 ring-1 ring-ember/25' : '', canEdit ? 'cursor-pointer hover:border-forge-600/50' : 'cursor-default opacity-70']"
             >
               <template v-if="card.projectId && projectStore.getProject(card.projectId)">
@@ -333,7 +333,7 @@ function formatDate(ts) {
             <!-- Dropdown -->
             <div
               v-if="showProjectDropdown"
-              class="absolute top-full left-0 right-0 mt-1 z-20 bg-forge-800 border border-forge-700/50 rounded-lg shadow-xl shadow-black/30 overflow-hidden animate-scale-in"
+              class="absolute top-full left-0 right-0 mt-1 z-20 bg-forge-800 border border-forge-700/50 rounded-xl shadow-soft-lg overflow-hidden animate-scale-in"
             >
               <!-- No project option -->
               <button
@@ -369,12 +369,12 @@ function formatDate(ts) {
 
         <!-- Assignee -->
         <div class="mb-4">
-          <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Assignee</label>
+          <label class="section-label block mb-2">Assignee</label>
           <div class="relative">
             <button
               @click="canEdit && (showAssigneeDropdown = !showAssigneeDropdown)"
               :disabled="!canEdit"
-              class="w-full flex items-center gap-2.5 bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-2.5 text-left transition-all"
+              class="w-full flex items-center gap-2.5 bg-forge-800 border border-forge-700/50 rounded-xl px-4 py-2.5 text-left transition-all duration-200"
               :class="[showAssigneeDropdown ? 'border-ember/50 ring-1 ring-ember/25' : '', canEdit ? 'cursor-pointer hover:border-forge-600/50' : 'cursor-default opacity-70']"
             >
               <template v-if="card.assignee">
@@ -397,7 +397,7 @@ function formatDate(ts) {
             <!-- Dropdown -->
             <div
               v-if="showAssigneeDropdown"
-              class="absolute top-full left-0 right-0 mt-1 z-20 max-h-56 overflow-y-auto bg-forge-800 border border-forge-700/50 rounded-lg shadow-xl shadow-black/30 animate-scale-in"
+              class="absolute top-full left-0 right-0 mt-1 z-20 max-h-56 overflow-y-auto bg-forge-800 border border-forge-700/50 rounded-xl shadow-soft-lg animate-scale-in"
             >
               <!-- Unassigned option -->
               <button
@@ -434,14 +434,14 @@ function formatDate(ts) {
 
         <!-- Images -->
         <div class="mb-6">
-          <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Images</label>
+          <label class="section-label block mb-2">Images</label>
 
           <!-- Existing images grid -->
           <div v-if="card.images?.length" class="grid grid-cols-3 gap-2 mb-3">
             <div
               v-for="(image, idx) in card.images"
               :key="idx"
-              class="group/img relative aspect-square rounded-lg overflow-hidden bg-forge-800 border border-forge-700/30"
+              class="group/img relative aspect-square rounded-xl overflow-hidden bg-forge-800 border border-forge-700/30 shadow-soft"
             >
               <img
                 :src="image.url"
@@ -452,7 +452,7 @@ function formatDate(ts) {
               <button
                 v-if="canEdit"
                 @click="removeImage(image)"
-                class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer hover:bg-red-500/80"
+                class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-forge-50 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer hover:bg-red-500/80"
               >
                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -474,7 +474,7 @@ function formatDate(ts) {
             v-if="canEdit"
             @click="fileInput?.click()"
             :disabled="uploading"
-            class="w-full py-3 border-2 border-dashed border-forge-700/40 hover:border-forge-600/60 rounded-lg text-forge-500 hover:text-forge-300 text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="focus-ring w-full py-3 border-2 border-dashed border-forge-700/40 hover:border-forge-600/60 hover:bg-forge-800/40 rounded-xl text-forge-500 hover:text-forge-300 text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <template v-if="uploading">
               <div class="w-4 h-4 border-2 border-forge-600 border-t-ember rounded-full animate-spin"></div>
@@ -490,7 +490,7 @@ function formatDate(ts) {
         </div>
 
         <!-- Metadata -->
-        <div class="mb-6 rounded-lg bg-forge-800/50 border border-forge-700/30 divide-y divide-forge-700/30">
+        <div class="mb-6 rounded-xl bg-forge-800/50 border border-forge-700/30 divide-y divide-forge-700/30 shadow-soft">
           <!-- Created by -->
           <div class="flex items-center justify-between px-4 py-2.5">
             <span class="text-xs text-forge-500 uppercase tracking-wider">Created by</span>
@@ -541,7 +541,7 @@ function formatDate(ts) {
           <button
             v-if="canEdit"
             @click="deleteCard"
-            class="px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
+            class="focus-ring px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
           >
             Delete Card
           </button>
@@ -549,14 +549,14 @@ function formatDate(ts) {
           <div class="flex gap-3">
             <button
               @click="emit('close')"
-              class="px-4 py-2 text-sm text-forge-300 hover:text-forge-100 transition-colors cursor-pointer"
+              class="focus-ring rounded-lg px-4 py-2 text-sm text-forge-300 hover:text-forge-100 transition-colors cursor-pointer"
             >
               {{ canEdit ? 'Cancel' : 'Close' }}
             </button>
             <button
               v-if="canEdit"
               @click="save"
-              class="px-5 py-2 bg-ember hover:bg-ember-glow text-white text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer"
+              class="btn-primary focus-ring"
             >
               Save
             </button>
@@ -578,7 +578,7 @@ function formatDate(ts) {
       />
       <button
         @click="lightboxUrl = null"
-        class="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+        class="focus-ring absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-forge-50 flex items-center justify-center transition-colors cursor-pointer"
       >
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />

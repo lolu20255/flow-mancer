@@ -20,7 +20,7 @@ const project = computed(() =>
 
 <template>
   <div
-    class="group bg-forge-800/70 hover:bg-forge-800 border border-forge-700/30 hover:border-forge-600/40 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-black/15 active:scale-[0.98] overflow-hidden"
+    class="group surface surface-interactive overflow-hidden rounded-xl"
   >
     <!-- Image preview (first image as cover) -->
     <div v-if="card.images?.length" class="relative">
