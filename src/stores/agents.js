@@ -46,7 +46,10 @@ export const useAgentStore = defineStore('agents', () => {
   }
 
   const decorated = computed(() =>
-    sessions.value.map(s => ({ ...s, stale: now.value - (s.updatedAt || 0) > STALE_MS }))
+    sessions.value.map(s => {
+      const stale = now.value - (s.updatedAt || 0) > STALE_MS
+      return { ...s, stale, waiting: !stale && s.status === 'waiting' }
+    })
   )
 
   // Group sessions into one entry per project for the monitor cards.
@@ -68,14 +71,16 @@ export const useAgentStore = defineStore('agents', () => {
     }
     for (const group of byProject.values()) {
       group.sessions.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
-      group.working = group.sessions.filter(s => !s.stale).length
+      group.working = group.sessions.filter(s => !s.stale && !s.waiting).length
+      group.waiting = group.sessions.filter(s => s.waiting).length
       group.lastActivity = Math.max(...group.sessions.map(s => s.updatedAt || 0))
     }
     return [...byProject.values()].sort((a, b) => b.lastActivity - a.lastActivity)
   })
 
   const hasSessions = computed(() => sessions.value.length > 0)
-  const workingCount = computed(() => decorated.value.filter(s => !s.stale).length)
+  const workingCount = computed(() => decorated.value.filter(s => !s.stale && !s.waiting).length)
+  const waitingCount = computed(() => decorated.value.filter(s => s.waiting).length)
 
-  return { sessions, loading, groups, hasSessions, workingCount, init, cleanup }
+  return { sessions, loading, groups, hasSessions, workingCount, waitingCount, init, cleanup }
 })

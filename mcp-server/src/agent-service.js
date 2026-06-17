@@ -62,6 +62,8 @@ export async function startAgentSession(ctx, args) {
     sessionId,
     agent,
     status: 'working',
+    // A fresh prompt clears any prior "waiting for input" state.
+    waitReason: null,
     projectId: args.project?.id || null,
     projectName: args.project?.name || null,
     projectEmoji: args.project?.emoji || null,
@@ -91,6 +93,30 @@ export async function beatAgentSession(ctx, args) {
     // Doc is gone (session already stopped). Nothing to heartbeat.
     return { id: ref.id, beat: false }
   }
+}
+
+// Mark a session as blocked on the user (permission prompt or idle input).
+// Like beat, it never resurrects a stopped session: if the doc is gone, no-op.
+export async function waitAgentSession(ctx, args) {
+  const { sessionId, agent } = requireSession(args)
+  const db = getDb()
+  const ref = db.collection(AGENT_SESSIONS_COL).doc(sessionDocId(agent, sessionId))
+  try {
+    await ref.update({ status: 'waiting', waitReason: classifyWait(args), updatedAt: Date.now() })
+    return { id: ref.id, status: 'waiting' }
+  } catch {
+    return { id: ref.id, status: 'missing' }
+  }
+}
+
+// Reduce a notification to a coarse reason the UI can badge: 'permission' or 'input'.
+function classifyWait({ notificationType, message }) {
+  const type = (notificationType || '').toLowerCase()
+  if (type.includes('permission')) return 'permission'
+  if (type.includes('idle')) return 'input'
+  const msg = (message || '').toLowerCase()
+  if (msg.includes('permission') || msg.includes('approve') || msg.includes('allow')) return 'permission'
+  return 'input'
 }
 
 // Clear the session. Idempotent: deleting a missing doc is a no-op.

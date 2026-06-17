@@ -62,7 +62,7 @@ Flowmancer (formerly Vibe Board) is an open-source kanban board app. It's a Trel
 - Important: never use hardcoded `text-white` or `hover:text-white` — use `text-forge-50` which adapts to both themes
 
 ### Key Design Decisions
-- **Fonts**: Fraunces (display/serif) + Outfit (body/sans-serif) via Google Fonts
+- **Fonts**: Geist (unified display + body sans-serif) via Google Fonts. Base size is bumped to 17px (`html { font-size }`); `.font-display` headings use tighter `-0.02em` tracking. (Previously Fraunces serif + Outfit.)
 - **Colors**: Custom `forge-*` palette (dark) with pastel overrides in light mode. Accent: `ember` (#f97316)
 - **Grain overlay**: SVG noise texture on `body::before` at low opacity
 - **Animations**: `fade-in-up`, `fade-in`, `scale-in` keyframes with staggered delays

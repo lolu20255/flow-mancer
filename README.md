@@ -369,8 +369,9 @@ The hook searches upward from the working directory, so a file at the repo root
 covers all subdirectories. A repo with no `.flowmancer` is simply not tracked.
 
 **2. Wire the hooks.** The CLI takes one subcommand and reads the hook's JSON from
-stdin: `start` (agent began a prompt), `beat` (throttled heartbeat), and `stop`
-(agent finished). It self-loads the repo root `.env` for credentials, so the only
+stdin: `start` (agent began a prompt), `beat` (throttled heartbeat), `wait`
+(agent is blocked on the user, shows an amber "waiting" card), and `stop` (agent
+finished). It self-loads the repo root `.env` for credentials, so the only
 requirement is an absolute path to the script. **Claude Code**
 (`~/.claude/settings.json`):
 
@@ -380,12 +381,20 @@ requirement is an absolute path to the script. **Claude Code**
     "UserPromptSubmit": [
       { "hooks": [ { "type": "command", "command": "node /ABS/PATH/vibe-board/mcp-server/scripts/agent-hook.js start" } ] }
     ],
+    "Notification": [
+      { "hooks": [ { "type": "command", "command": "node /ABS/PATH/vibe-board/mcp-server/scripts/agent-hook.js wait" } ] }
+    ],
     "Stop": [
       { "hooks": [ { "type": "command", "command": "node /ABS/PATH/vibe-board/mcp-server/scripts/agent-hook.js stop" } ] }
     ]
   }
 }
 ```
+
+The `Notification` hook fires when Claude needs permission or has been waiting
+idle for your input, so the card flips to amber and shows whether it "needs
+approval" or "needs your input" (read from the notification `message`). Your next
+prompt (`start`) flips it back to working; `stop` clears it.
 
 For **Codex** (or any other agent), call the same script from its equivalent
 start/stop hooks and pass `--agent codex` so the monitor labels it correctly.

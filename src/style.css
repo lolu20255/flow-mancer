@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: 'Fraunces', serif;
-  --font-body: 'Outfit', sans-serif;
+  --font-display: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --color-forge-950: #08080a;
   --color-forge-900: #0f0f13;
   --color-forge-850: #141419;
@@ -52,17 +52,29 @@
   box-sizing: border-box;
 }
 
+/* Slightly larger base than the 16px default for a more modern, readable feel.
+   Tailwind rem utilities scale proportionally from this. */
+html {
+  font-size: 17px;
+}
+
 body {
   margin: 0;
   padding: 0;
   background-color: var(--color-forge-950);
   color: var(--color-forge-100);
   font-family: var(--font-body);
+  letter-spacing: -0.006em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
   height: 100dvh;
   transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* Headings get tighter tracking, which suits Geist at display sizes. */
+.font-display {
+  letter-spacing: -0.02em;
 }
 
 /* Smooth theme transitions on all themed elements */
@@ -226,10 +238,25 @@ body::before {
   }
 }
 
+/* ── Agent waiting on the user: calmer amber "needs you" pulse ── */
+.agent-card-waiting {
+  animation: agent-wait-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes agent-wait-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.12), 0 0 16px -8px rgba(251, 191, 36, 0.40);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.28), 0 0 26px -6px rgba(251, 191, 36, 0.55);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .agent-card-active,
   .agent-card-active::before,
-  .agent-card-active::after {
+  .agent-card-active::after,
+  .agent-card-waiting {
     animation: none;
   }
 }

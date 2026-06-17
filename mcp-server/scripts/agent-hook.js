@@ -10,6 +10,7 @@
 // Usage (the subcommand is the first arg):
 //   node agent-hook.js start   # agent began processing a prompt
 //   node agent-hook.js beat    # heartbeat (throttled); keeps the card "alive"
+//   node agent-hook.js wait    # agent is blocked waiting for user input/approval
 //   node agent-hook.js stop    # agent finished; clears the card
 //
 // Context comes from the hook's JSON on stdin (session id, cwd, prompt) with
@@ -31,8 +32,8 @@ main()
 async function main() {
   try {
     const command = process.argv[2]
-    if (!['start', 'beat', 'stop'].includes(command)) {
-      throw new Error(`Unknown command "${command || ''}". Use start | beat | stop.`)
+    if (!['start', 'beat', 'wait', 'stop'].includes(command)) {
+      throw new Error(`Unknown command "${command || ''}". Use start | beat | wait | stop.`)
     }
 
     loadEnvFile(path.join(PACKAGE_ROOT, '..', '.env'))
@@ -69,6 +70,11 @@ async function dispatch(command, agentService, ctx, ctxInput) {
     markBeat(ctxInput)
     return
   }
+  if (command === 'wait') {
+    await agentService.waitAgentSession(ctx, ctxInput)
+    markBeat(ctxInput)
+    return
+  }
   // start
   const project = await agentService.resolveSessionProject(ctx, {
     projectId: ctxInput.projectId,
@@ -93,6 +99,9 @@ function buildContext(flags, payload) {
     cwd,
     host: os.hostname(),
     task,
+    // Notification hook context (used by the `wait` command).
+    message: flags.message || payload.message || null,
+    notificationType: flags['notification-type'] || payload.notification_type || null,
     projectId: flags['project-id'] || repo.projectId || null,
     projectName: flags.project || repo.project || null,
   }
