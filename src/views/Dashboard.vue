@@ -98,12 +98,6 @@ async function copyProjectId(project) {
         </div>
         <div class="flex items-center gap-3">
           <ThemeToggle />
-          <button @click="openModal" class="btn-primary focus-ring">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            New Board
-          </button>
 
           <!-- User menu -->
           <div class="relative">
@@ -164,9 +158,9 @@ async function copyProjectId(project) {
               <p class="section-label">Projects</p>
               <button
                 @click="openNewProject"
-                class="text-xs text-forge-400 hover:text-ember transition-colors cursor-pointer flex items-center gap-1"
+                class="focus-ring group/add inline-flex items-center gap-1.5 rounded-lg border border-ember/25 bg-ember/10 px-2.5 py-1.5 text-xs font-medium text-ember transition-all duration-200 hover:border-ember/40 hover:bg-ember/20 cursor-pointer"
               >
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="w-3.5 h-3.5 transition-transform duration-200 group-hover/add:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
                 New Project
@@ -239,7 +233,18 @@ async function copyProjectId(project) {
 
           <!-- Boards Section -->
           <div>
-            <p class="section-label mb-4">Boards</p>
+            <div class="flex items-center justify-between mb-4">
+              <p class="section-label">Boards</p>
+              <button
+                @click="openModal"
+                class="focus-ring group/add inline-flex items-center gap-1.5 rounded-lg border border-ember/25 bg-ember/10 px-2.5 py-1.5 text-xs font-medium text-ember transition-all duration-200 hover:border-ember/40 hover:bg-ember/20 cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5 transition-transform duration-200 group-hover/add:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                New Board
+              </button>
+            </div>
 
             <div v-if="store.boards.length === 0" class="flex flex-col items-center justify-center py-24">
               <div class="w-20 h-20 rounded-2xl bg-forge-800/50 flex items-center justify-center mb-6 border border-forge-700/30">
