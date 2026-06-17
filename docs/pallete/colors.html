@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flowmancer — Color Palette</title>
+<style>
+  /* ── Tokens mirror src/style.css exactly. The forge-* scale INVERTS between
+     themes (in dark, 950 = darkest bg / 50 = lightest text; in light it flips). ── */
+  :root {
+    --font: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    --forge-950: #0b0d11;
+    --forge-900: #13151c;
+    --forge-850: #181b23;
+    --forge-800: #1f232c;
+    --forge-700: #2c313c;
+    --forge-600: #3f4552;
+    --forge-500: #5b6271;
+    --forge-400: #888fa0;
+    --forge-300: #aab0bf;
+    --forge-200: #cacfda;
+    --forge-100: #e8eaf0;
+    --forge-50:  #f5f6f9;
+
+    --ember:      #6366f1;
+    --ember-glow: #818cf8;
+    --ember-deep: #4f46e5;
+
+    --wait: #fbbf24;
+
+    --shadow: 0 2px 10px -3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
+  }
+
+  :root[data-theme="light"] {
+    --forge-950: #f1f3f7;
+    --forge-900: #ffffff;
+    --forge-850: #f7f8fb;
+    --forge-800: #e4e7ee;
+    --forge-700: #d0d5df;
+    --forge-600: #9aa1b0;
+    --forge-500: #757d8c;
+    --forge-400: #565d6b;
+    --forge-300: #3b414d;
+    --forge-200: #272b33;
+    --forge-100: #161920;
+    --forge-50:  #0b0d11;
+
+    --ember:      #4f46e5;
+    --ember-glow: #6366f1;
+    --ember-deep: #4338ca;
+
+    --wait: #b45309;
+
+    --shadow: 0 1px 3px rgba(28,33,45,0.07), 0 6px 18px -6px rgba(28,33,45,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background-color: var(--forge-950);
+    color: var(--forge-100);
+    padding: 48px 32px 80px;
+    transition: background-color .35s, color .35s;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1040px; margin: 0 auto; }
+
+  header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 8px; gap: 16px; flex-wrap: wrap; }
+  h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; color: var(--forge-50); }
+  .sub { color: var(--forge-400); font-size: 14px; margin-top: 6px; line-height: 1.5; max-width: 620px; }
+
+  .toggle {
+    font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+    color: var(--forge-100); background-color: var(--forge-800);
+    border: 1px solid color-mix(in srgb, var(--forge-700) 70%, transparent);
+    border-radius: 10px; padding: 9px 14px; transition: all .2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .toggle:hover { border-color: var(--ember); color: var(--ember); }
+
+  section { margin-top: 44px; }
+  .label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--forge-400); margin-bottom: 16px;
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+
+  .swatch {
+    border-radius: 12px; overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--forge-600) 45%, transparent);
+    background-color: var(--forge-900); box-shadow: var(--shadow);
+  }
+  .chip { height: 78px; }
+  .meta { padding: 10px 12px; }
+  .meta .name { font-size: 13px; font-weight: 600; color: var(--forge-100); }
+  .meta .hex { font-size: 12px; color: var(--forge-400); font-variant-numeric: tabular-nums; margin-top: 2px;
+               font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; }
+
+  /* Accent gradient demo */
+  .accent-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch; }
+  .accent-card {
+    flex: 1 1 200px; border-radius: 14px; padding: 18px; min-height: 110px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: var(--shadow);
+  }
+  .accent-card .ttl { font-size: 13px; font-weight: 600; }
+  .accent-card .hex { font-family: ui-monospace, Menlo, monospace; font-size: 12px; opacity: .85; }
+  .btn-demo {
+    background: linear-gradient(135deg, var(--ember-glow), var(--ember-deep));
+    color: #fff; border: none; border-radius: 12px; padding: 12px 20px;
+    font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--ember) 60%, transparent);
+  }
+
+  .wait-demo {
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+    background-color: color-mix(in srgb, var(--wait) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--wait) 40%, transparent);
+    color: var(--wait); font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .wait-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--wait); }
+
+  .note { color: var(--forge-500); font-size: 12px; margin-top: 14px; line-height: 1.6; }
+
+  /* ── Button gallery ── */
+  .btn-group { display: flex; flex-direction: column; gap: 22px; }
+  .btn-block {
+    border-radius: 14px; padding: 20px;
+    background-color: var(--forge-900);
+    border: 1px solid color-mix(in srgb, var(--forge-600) 38%, transparent);
+    box-shadow: var(--shadow);
+  }
+  .btn-block h3 { font-size: 14px; font-weight: 600; color: var(--forge-100); margin-bottom: 4px; }
+  .btn-block p { font-size: 12px; color: var(--forge-500); margin-bottom: 16px; line-height: 1.5; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+  /* shared base for the gallery buttons */
+  .b {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    border-radius: 11px; padding: 10px 18px; cursor: pointer;
+    border: 1px solid transparent; transition: all .18s ease; line-height: 1;
+  }
+  .b:active { transform: scale(0.97); }
+  .b .ic { width: 15px; height: 15px; stroke-width: 2.2; }
+  .b.sm { font-size: 12.5px; padding: 7px 13px; border-radius: 9px; }
+
+  /* Primary — ember gradient (the canonical CTA) */
+  .b-primary {
+    color: #fff; border: none;
+    background: linear-gradient(135deg, var(--ember-glow), var(--ember-deep));
+    box-shadow: 0 6px 18px -7px color-mix(in srgb, var(--ember) 60%, transparent);
+  }
+  .b-primary:hover { filter: brightness(1.06) saturate(1.05); }
+
+  /* Solid ember (flat, no gradient) */
+  .b-solid { color: #fff; background: var(--ember); border: none; }
+  .b-solid:hover { background: var(--ember-deep); }
+
+  /* Tonal ember — soft tinted fill */
+  .b-tonal {
+    color: var(--ember);
+    background: color-mix(in srgb, var(--ember) 14%, transparent);
+    border-color: color-mix(in srgb, var(--ember) 22%, transparent);
+  }
+  .b-tonal:hover { background: color-mix(in srgb, var(--ember) 22%, transparent); }
+
+  /* Outline ember */
+  .b-outline {
+    color: var(--ember); background: transparent;
+    border-color: color-mix(in srgb, var(--ember) 50%, transparent);
+  }
+  .b-outline:hover { background: color-mix(in srgb, var(--ember) 10%, transparent); border-color: var(--ember); }
+
+  /* Secondary — neutral surface (.btn-secondary) */
+  .b-secondary {
+    color: var(--forge-100); background: var(--forge-800);
+    border-color: color-mix(in srgb, var(--forge-700) 60%, transparent);
+  }
+  .b-secondary:hover { background: var(--forge-700); border-color: var(--forge-600); }
+
+  /* Ghost / add-pill (the New Project / New Board buttons) */
+  .b-ghost {
+    color: var(--forge-300); font-weight: 500;
+    background: color-mix(in srgb, var(--forge-900) 60%, transparent);
+    border-color: color-mix(in srgb, var(--forge-700) 70%, transparent);
+  }
+  .b-ghost:hover { color: var(--ember); border-color: color-mix(in srgb, var(--ember) 40%, transparent); background: color-mix(in srgb, var(--ember) 10%, transparent); }
+
+  /* Subtle text button */
+  .b-text { color: var(--forge-300); background: transparent; border: none; font-weight: 500; }
+  .b-text:hover { color: var(--forge-50); background: color-mix(in srgb, var(--forge-700) 35%, transparent); }
+
+  /* Destructive */
+  .b-danger { color: #fff; background: #dc2626; border: none; }
+  .b-danger:hover { background: #b91c1c; }
+  .b-danger-tonal {
+    color: #f87171; background: color-mix(in srgb, #ef4444 14%, transparent);
+    border-color: color-mix(in srgb, #ef4444 30%, transparent);
+  }
+  .b-danger-tonal:hover { background: color-mix(in srgb, #ef4444 22%, transparent); }
+
+  /* Success / confirm */
+  .b-success { color: #fff; background: #10b981; border: none; }
+  .b-success:hover { background: #059669; }
+  .b-success-tonal {
+    color: #34d399; background: color-mix(in srgb, #10b981 14%, transparent);
+    border-color: color-mix(in srgb, #10b981 30%, transparent);
+  }
+
+  /* Wait / amber (agent waiting accent) */
+  .b-wait {
+    color: var(--wait); background: color-mix(in srgb, var(--wait) 14%, transparent);
+    border-color: color-mix(in srgb, var(--wait) 40%, transparent);
+  }
+  .b-wait:hover { background: color-mix(in srgb, var(--wait) 22%, transparent); }
+
+  /* Icon-only */
+  .b-icon {
+    padding: 9px; border-radius: 10px; color: var(--forge-400);
+    background: var(--forge-800); border-color: color-mix(in srgb, var(--forge-700) 55%, transparent);
+  }
+  .b-icon:hover { color: var(--ember); border-color: color-mix(in srgb, var(--ember) 40%, transparent); }
+  .b-icon .ic { width: 16px; height: 16px; }
+
+  .b:disabled, .b.is-disabled { opacity: .45; cursor: not-allowed; filter: none; transform: none; pointer-events: none; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Flowmancer Palette</h1>
+        <p class="sub">A single semantic <code>forge-*</code> scale that inverts between themes (in dark, 950 = darkest bg and 50 = lightest text; in light the scale flips), plus an indigo <code>ember</code> accent. Toggle to see how the same token names adapt.</p>
+      </div>
+      <button class="toggle" id="toggle">
+        <span id="toggleIcon">🌙</span><span id="toggleText">Dark</span>
+      </button>
+    </header>
+
+    <section>
+      <p class="label">Accent · Indigo (ember)</p>
+      <div class="accent-row">
+        <div class="accent-card" style="background:var(--ember)">
+          <div class="ttl" style="color:#fff">ember</div>
+          <div class="hex" id="hexEmber" style="color:#fff"></div>
+        </div>
+        <div class="accent-card" style="background:var(--ember-glow)">
+          <div class="ttl" style="color:#fff">ember-glow</div>
+          <div class="hex" id="hexGlow" style="color:#fff"></div>
+        </div>
+        <div class="accent-card" style="background:var(--ember-deep)">
+          <div class="ttl" style="color:#fff">ember-deep</div>
+          <div class="hex" id="hexDeep" style="color:#fff"></div>
+        </div>
+        <div class="accent-card" style="background:var(--forge-900); align-items:flex-start; justify-content:center; gap:12px;">
+          <button class="btn-demo">Primary CTA</button>
+          <div class="wait-demo"><span class="wait-dot"></span>Waiting</div>
+        </div>
+      </div>
+      <p class="note">Gradient <code>--fm-ember-grad</code> = 135°, ember-glow → ember-deep (the <code>.btn-primary</code> fill). Waiting accent <code>--fm-wait</code>: <span id="waitHex"></span>.</p>
+    </section>
+
+    <section>
+      <p class="label">Forge · Neutral scale</p>
+      <div class="grid" id="forgeGrid"></div>
+    </section>
+
+    <section>
+      <p class="label">Buttons · Every variant this palette supports</p>
+      <div class="btn-group">
+
+        <div class="btn-block">
+          <h3>Indigo accent (ember)</h3>
+          <p>The brand color. Use ONE primary CTA per view; the rest stay neutral. Tonal/outline are good for secondary accent actions.</p>
+          <div class="btn-row">
+            <button class="b b-primary"><svg class="ic" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Primary (gradient)</button>
+            <button class="b b-solid">Solid ember</button>
+            <button class="b b-tonal">Tonal</button>
+            <button class="b b-outline">Outline</button>
+            <button class="b b-primary is-disabled">Disabled</button>
+          </div>
+        </div>
+
+        <div class="btn-block">
+          <h3>Neutral (forge)</h3>
+          <p>Cancel, secondary actions, and the inline “New Project / New Board” add-pills. These carry the bulk of the UI.</p>
+          <div class="btn-row">
+            <button class="b b-secondary">Secondary</button>
+            <button class="b b-ghost sm"><svg class="ic" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>New Project</button>
+            <button class="b b-text">Text button</button>
+            <button class="b b-icon" title="Edit"><svg class="ic" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+          </div>
+        </div>
+
+        <div class="btn-block">
+          <h3>Destructive (red)</h3>
+          <p>Delete board, sign out, remove. Reserve solid red for irreversible confirms; tonal for in-card delete affordances.</p>
+          <div class="btn-row">
+            <button class="b b-danger"><svg class="ic" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Delete</button>
+            <button class="b b-danger-tonal">Remove</button>
+            <button class="b b-text" style="color:#f87171">Cancel</button>
+          </div>
+        </div>
+
+        <div class="btn-block">
+          <h3>Status accents</h3>
+          <p>Green for confirm/success; amber (<code>--fm-wait</code>) for the agent “waiting for input” state. Both are theme-aware.</p>
+          <div class="btn-row">
+            <button class="b b-success"><svg class="ic" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Confirm</button>
+            <button class="b b-success-tonal">Approved</button>
+            <button class="b b-wait"><span class="wait-dot"></span>Waiting</button>
+          </div>
+        </div>
+
+        <div class="btn-block">
+          <h3>Sizes</h3>
+          <p>Same tokens, two scales. <code>sm</code> for dense rows and section headers, default for modals and primary CTAs.</p>
+          <div class="btn-row">
+            <button class="b b-primary sm">Small</button>
+            <button class="b b-primary">Default</button>
+            <button class="b b-secondary sm">Small</button>
+            <button class="b b-secondary">Default</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+<script>
+  const forgeSteps = ['950','900','850','800','700','600','500','400','300','200','100','50'];
+  const grid = document.getElementById('forgeGrid');
+  forgeSteps.forEach(step => {
+    const el = document.createElement('div');
+    el.className = 'swatch';
+    el.innerHTML = `
+      <div class="chip" style="background:var(--forge-${step})"></div>
+      <div class="meta">
+        <div class="name">forge-${step}</div>
+        <div class="hex" data-token="--forge-${step}"></div>
+      </div>`;
+    grid.appendChild(el);
+  });
+
+  function refreshHexes() {
+    const cs = getComputedStyle(document.documentElement);
+    document.querySelectorAll('[data-token]').forEach(node => {
+      node.textContent = cs.getPropertyValue(node.dataset.token).trim();
+    });
+    document.getElementById('hexEmber').textContent = cs.getPropertyValue('--ember').trim();
+    document.getElementById('hexGlow').textContent = cs.getPropertyValue('--ember-glow').trim();
+    document.getElementById('hexDeep').textContent = cs.getPropertyValue('--ember-deep').trim();
+    document.getElementById('waitHex').textContent = cs.getPropertyValue('--wait').trim();
+  }
+
+  const toggle = document.getElementById('toggle');
+  const icon = document.getElementById('toggleIcon');
+  const text = document.getElementById('toggleText');
+  function applyTheme(mode) {
+    if (mode === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      icon.textContent = '☀️'; text.textContent = 'Light';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      icon.textContent = '🌙'; text.textContent = 'Dark';
+    }
+    refreshHexes();
+  }
+  let mode = 'dark';
+  toggle.addEventListener('click', () => { mode = mode === 'dark' ? 'light' : 'dark'; applyTheme(mode); });
+
+  applyTheme('dark');
+</script>
+</body>
+</html>
