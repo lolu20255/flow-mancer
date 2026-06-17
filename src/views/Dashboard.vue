@@ -91,29 +91,18 @@ async function copyProjectId(project) {
     <header class="shrink-0 border-b border-forge-800/60 px-8 py-6">
       <div class="max-w-6xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <svg class="w-9 h-9" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="logo-g" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#f97316"/>
-                <stop offset="100%" stop-color="#f59e0b"/>
-              </linearGradient>
-            </defs>
-            <rect width="32" height="32" rx="8" fill="url(#logo-g)"/>
-            <rect x="6" y="8" width="5" height="16" rx="1.5" fill="white" opacity="0.9"/>
-            <rect x="13.5" y="8" width="5" height="11" rx="1.5" fill="white" opacity="0.9"/>
-            <rect x="21" y="8" width="5" height="14" rx="1.5" fill="white" opacity="0.9"/>
-          </svg>
+          <img src="/flowmancer-icon.png" alt="Flowmancer" class="w-9 h-9" />
           <h1 class="font-display text-2xl font-medium text-forge-50 tracking-tight">
             Flowmancer
           </h1>
         </div>
         <div class="flex items-center gap-3">
           <ThemeToggle />
-          <button
-            @click="openModal"
-            class="px-4 py-2 bg-ember hover:bg-ember-glow text-white text-sm font-medium rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-ember/25 active:scale-95 cursor-pointer"
-          >
-            + New Board
+          <button @click="openModal" class="btn-primary focus-ring">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            New Board
           </button>
 
           <!-- User menu -->
@@ -172,10 +161,10 @@ async function copyProjectId(project) {
           <!-- Projects Section -->
           <div class="mb-10">
             <div class="flex items-center justify-between mb-4">
-              <p class="text-forge-400 text-sm font-medium uppercase tracking-widest">Projects</p>
+              <p class="section-label">Projects</p>
               <button
                 @click="openNewProject"
-                class="text-xs text-forge-400 hover:text-forge-200 transition-colors cursor-pointer flex items-center gap-1"
+                class="text-xs text-forge-400 hover:text-ember transition-colors cursor-pointer flex items-center gap-1"
               >
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -186,19 +175,16 @@ async function copyProjectId(project) {
 
             <div v-if="projectStore.projects.length === 0" class="py-6 text-center">
               <p class="text-forge-500 text-sm mb-3">No projects yet. Projects help you group cards across boards.</p>
-              <button
-                @click="openNewProject"
-                class="px-4 py-2 bg-forge-800 hover:bg-forge-700 text-forge-200 text-sm rounded-lg border border-forge-700/50 transition-all cursor-pointer"
-              >
+              <button @click="openNewProject" class="btn-secondary focus-ring">
                 Create a Project
               </button>
             </div>
 
-            <div v-else class="flex flex-wrap gap-2.5">
+            <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div
                 v-for="(project, i) in projectStore.projects"
                 :key="project.id"
-                class="group flex items-start gap-2.5 bg-forge-900 border border-forge-800/60 rounded-lg px-4 py-2.5 transition-all duration-200 hover:border-forge-600/60 animate-fade-in-up"
+                class="group flex items-start gap-2.5 bg-forge-900 border border-forge-800/70 rounded-xl px-4 py-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:border-forge-600/60 hover:shadow-soft-lg animate-fade-in-up"
                 :style="{ animationDelay: `${i * 40}ms` }"
               >
                 <!-- Color dot -->
@@ -208,15 +194,15 @@ async function copyProjectId(project) {
                 ></div>
                 <span class="text-sm leading-5">{{ project.emoji }}</span>
 
-                <div class="flex flex-col min-w-0">
-                  <span class="text-sm font-medium text-forge-100 leading-5">{{ project.name }}</span>
+                <div class="flex flex-col min-w-0 flex-1">
+                  <span class="text-sm font-medium text-forge-100 leading-5 truncate">{{ project.name }}</span>
 
                   <!-- Project id + copy action (paste into a repo's .flowmancer) -->
                   <button
                     @click="copyProjectId(project)"
                     :title="copiedId === project.id ? 'Copied!' : 'Copy project id'"
-                    class="mt-0.5 flex items-center gap-1 text-[10px] font-mono transition-colors cursor-pointer"
-                    :class="copiedId === project.id ? 'text-emerald-400' : 'text-forge-500 hover:text-forge-300'"
+                    class="mt-1 chip-mono cursor-pointer"
+                    :class="copiedId === project.id ? '!text-emerald-400' : 'hover:!text-forge-200'"
                   >
                     <svg v-if="copiedId === project.id" class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -253,7 +239,7 @@ async function copyProjectId(project) {
 
           <!-- Boards Section -->
           <div>
-            <p class="text-forge-400 text-sm font-medium uppercase tracking-widest mb-4">Boards</p>
+            <p class="section-label mb-4">Boards</p>
 
             <div v-if="store.boards.length === 0" class="flex flex-col items-center justify-center py-24">
               <div class="w-20 h-20 rounded-2xl bg-forge-800/50 flex items-center justify-center mb-6 border border-forge-700/30">
@@ -263,10 +249,10 @@ async function copyProjectId(project) {
               </div>
               <p class="text-forge-300 text-lg mb-2">No boards yet</p>
               <p class="text-forge-500 text-sm mb-6">Create your first board to start organizing</p>
-              <button
-                @click="openModal"
-                class="px-5 py-2.5 bg-forge-800 hover:bg-forge-700 text-forge-100 text-sm font-medium rounded-lg border border-forge-700/50 transition-all duration-200 cursor-pointer"
-              >
+              <button @click="openModal" class="btn-primary focus-ring">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
                 Create a Board
               </button>
             </div>
@@ -276,7 +262,7 @@ async function copyProjectId(project) {
                 v-for="(board, i) in store.boards"
                 :key="board.id"
                 @click="openBoard(board.id)"
-                class="group relative bg-forge-900 border border-forge-800/60 rounded-xl p-5 cursor-pointer transition-all duration-300 hover:border-forge-600/60 hover:bg-forge-850 hover:shadow-xl hover:shadow-black/20 animate-fade-in-up"
+                class="group relative surface surface-interactive p-5 animate-fade-in-up"
                 :style="{ animationDelay: `${i * 60}ms` }"
               >
                 <div class="flex items-start justify-between mb-4">
@@ -328,8 +314,8 @@ async function copyProjectId(project) {
         class="fixed inset-0 z-50 flex items-center justify-center"
       >
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" @click="showCreateModal = false"></div>
-        <div class="relative bg-forge-900 border border-forge-700/50 rounded-2xl p-6 w-full max-w-md shadow-2xl shadow-black/40 animate-scale-in">
-          <h2 class="font-display text-xl text-forge-50 mb-5">New Board</h2>
+        <div class="relative bg-forge-900 border border-forge-700/50 rounded-2xl p-6 w-full max-w-md shadow-soft-lg animate-scale-in">
+          <h2 class="font-display text-xl font-semibold text-forge-50 mb-5">New Board</h2>
 
           <div class="mb-4">
             <label class="block text-forge-400 text-xs font-medium uppercase tracking-wider mb-2">Icon</label>
@@ -354,7 +340,7 @@ async function copyProjectId(project) {
               @keydown.enter="createBoard"
               type="text"
               placeholder="e.g. Product Roadmap"
-              class="w-full bg-forge-800 border border-forge-700/50 rounded-lg px-4 py-3 text-forge-50 placeholder-forge-500 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/25 transition-all"
+              class="input-field"
             />
           </div>
 
@@ -368,7 +354,7 @@ async function copyProjectId(project) {
             <button
               @click="createBoard"
               :disabled="!newBoardName.trim()"
-              class="px-5 py-2 bg-ember hover:bg-ember-glow disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer"
+              class="btn-primary focus-ring"
             >
               Create Board
             </button>

@@ -22,22 +22,30 @@ function elapsed(session) {
   return `${hours}h ${mins % 60}m`
 }
 
+function waitLabel(session) {
+  return session.waitReason === 'permission' ? 'Needs approval' : 'Needs your input'
+}
+
 const summary = computed(() => {
-  const n = agentStore.workingCount
-  if (n === 0) return 'All idle'
-  return `${n} agent${n === 1 ? '' : 's'} working`
+  const parts = []
+  if (agentStore.workingCount) parts.push(`${agentStore.workingCount} working`)
+  if (agentStore.waitingCount) parts.push(`${agentStore.waitingCount} waiting`)
+  return parts.length ? parts.join(' · ') : 'All idle'
+})
+
+const statusDotClass = computed(() => {
+  if (agentStore.workingCount > 0) return 'bg-emerald-400 animate-pulse'
+  if (agentStore.waitingCount > 0) return 'wait-dot animate-pulse'
+  return 'bg-forge-600'
 })
 </script>
 
 <template>
   <div v-if="agentStore.hasSessions" class="mb-10">
     <div class="flex items-center justify-between mb-4">
-      <p class="text-forge-400 text-sm font-medium uppercase tracking-widest">Agents</p>
+      <p class="section-label">Agents</p>
       <span class="flex items-center gap-2 text-xs text-forge-400">
-        <span
-          class="w-1.5 h-1.5 rounded-full"
-          :class="agentStore.workingCount > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-forge-600'"
-        ></span>
+        <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass"></span>
         {{ summary }}
       </span>
     </div>
@@ -51,7 +59,11 @@ const summary = computed(() => {
       >
        <div
         class="relative bg-forge-900 border rounded-xl p-4 overflow-hidden transition-colors"
-        :class="group.working > 0 ? 'agent-card-active border-emerald-500/20' : 'border-forge-800/60'"
+        :class="group.working > 0
+          ? 'agent-card-active border-emerald-500/20'
+          : group.waiting > 0
+            ? 'agent-card-waiting wait-border'
+            : 'border-forge-800/60'"
        >
         <div class="relative z-10">
         <div class="flex items-center justify-between mb-3">
@@ -68,8 +80,16 @@ const summary = computed(() => {
             <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
           </span>
           <span
+            v-else-if="group.waiting > 0"
+            class="flex items-center gap-1 text-[10px] uppercase tracking-wider wait-text px-1.5 py-0.5 rounded wait-soft border wait-border shrink-0"
+            title="Waiting for your input"
+          >
+            <span class="w-1.5 h-1.5 rounded-full wait-dot animate-pulse"></span>
+            waiting
+          </span>
+          <span
             v-else
-            class="text-[10px] uppercase tracking-wider text-amber-400/80 px-1.5 py-0.5 rounded bg-amber-400/10 border border-amber-400/20 shrink-0"
+            class="text-[10px] uppercase tracking-wider wait-text px-1.5 py-0.5 rounded wait-soft border wait-border shrink-0"
             title="No recent heartbeat; agent may have stopped"
           >
             stale
@@ -85,8 +105,19 @@ const summary = computed(() => {
           >
             <span class="text-xs mt-0.5 shrink-0" :title="session.agent">{{ agentGlyph(session.agent) }}</span>
             <div class="min-w-0 flex-1">
-              <p class="text-xs text-forge-300 truncate" :title="session.task || ''">
-                {{ session.task || 'Working…' }}
+              <p
+                class="text-xs truncate"
+                :class="session.waiting ? 'wait-text' : 'text-forge-300'"
+                :title="session.task || ''"
+              >
+                {{ session.task || (session.waiting ? 'Waiting for you…' : 'Working…') }}
+              </p>
+              <p
+                v-if="session.waiting"
+                class="text-[10px] wait-text font-medium uppercase tracking-wider flex items-center gap-1"
+              >
+                <span class="w-1 h-1 rounded-full wait-dot animate-pulse"></span>
+                {{ waitLabel(session) }}
               </p>
               <p class="text-[10px] text-forge-500 truncate">
                 {{ session.agent }} · {{ elapsed(session) }}
