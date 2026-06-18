@@ -1,8 +1,12 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import { useBoardStore } from '../stores/board.js'
 import { useProjectStore } from '../stores/projects.js'
 import { useUsersStore } from '../stores/users.js'
+
+marked.setOptions({ gfm: true, breaks: true })
 
 const props = defineProps({
   card: Object,
@@ -41,13 +45,36 @@ function moveToColumn(colId) {
   currentColumnId.value = colId
 }
 
+const MAX_DESCRIPTION_HEIGHT = 400
+
 const title = ref(props.card.title)
 const description = ref(props.card.description || '')
 const newLabel = ref('')
 const titleInput = ref(null)
 const descInput = ref(null)
 
-const MAX_DESCRIPTION_HEIGHT = 400
+// Jira-style description: render markdown by default, click to edit in place.
+const editingDescription = ref(false)
+const renderedDescription = computed(() =>
+  DOMPurify.sanitize(marked.parse(description.value || ''))
+)
+
+function startEditDescription() {
+  if (!props.canEdit) return
+  editingDescription.value = true
+  nextTick(() => {
+    descInput.value?.focus()
+    autoResizeDescription()
+  })
+}
+
+// Leaving the editor persists the change and returns to the rendered view.
+function stopEditDescription() {
+  editingDescription.value = false
+  const next = description.value.trim()
+  if (next === (props.card.description || '')) return
+  store.updateCard(props.boardId, currentColumnId.value, props.card.id, { description: next })
+}
 
 function autoResizeDescription() {
   const el = descInput.value
@@ -236,18 +263,39 @@ function formatDate(ts) {
           />
         </div>
 
-        <!-- Description -->
+        <!-- Description (Jira-style: rendered markdown, click to edit) -->
         <div class="mb-4">
           <label class="section-label block mb-2">Description</label>
+
           <textarea
+            v-if="editingDescription"
             ref="descInput"
             v-model="description"
             rows="3"
-            placeholder="Add details..."
-            :readonly="!canEdit"
+            placeholder="Add details... (Markdown supported)"
             @input="autoResizeDescription"
-            class="input-field resize-y overflow-y-auto read-only:opacity-70"
+            @blur="stopEditDescription"
+            @keydown.esc="stopEditDescription"
+            class="input-field resize-y overflow-y-auto"
           ></textarea>
+
+          <div
+            v-else-if="description.trim()"
+            class="md-body input-field min-h-[3rem] cursor-text whitespace-normal"
+            :class="canEdit ? 'hover:border-forge-600/60' : 'cursor-default opacity-70'"
+            @click="startEditDescription"
+            v-html="renderedDescription"
+          ></div>
+
+          <button
+            v-else
+            type="button"
+            :disabled="!canEdit"
+            @click="startEditDescription"
+            class="input-field text-left text-forge-500 cursor-text disabled:cursor-default hover:border-forge-600/60"
+          >
+            Add details... (Markdown supported)
+          </button>
         </div>
 
         <!-- Labels -->
@@ -587,3 +635,67 @@ function formatDate(ts) {
     </div>
   </Teleport>
 </template>
+
+<style scoped>
+/* Rendered markdown for the card description. v-html content sits outside the
+   scoped-style boundary, so each rule is wrapped in :deep(). */
+.md-body { line-height: 1.6; padding-top: 0.6rem; padding-bottom: 0.6rem; }
+.md-body :deep(> *:first-child) { margin-top: 0; }
+.md-body :deep(> *:last-child) { margin-bottom: 0; }
+.md-body :deep(h1),
+.md-body :deep(h2),
+.md-body :deep(h3) {
+  font-weight: 600;
+  color: var(--color-forge-50);
+  margin: 1.1em 0 0.4em;
+  line-height: 1.3;
+}
+.md-body :deep(h1) { font-size: 1.15rem; }
+.md-body :deep(h2) { font-size: 1.05rem; }
+.md-body :deep(h3) { font-size: 0.95rem; }
+.md-body :deep(p) { margin: 0.5em 0; }
+.md-body :deep(strong) { font-weight: 600; color: var(--color-forge-50); }
+.md-body :deep(em) { font-style: italic; }
+.md-body :deep(a) { color: var(--color-ember); text-decoration: underline; }
+.md-body :deep(ul),
+.md-body :deep(ol) { margin: 0.5em 0; padding-left: 1.4em; }
+.md-body :deep(ul) { list-style: disc; }
+.md-body :deep(ol) { list-style: decimal; }
+.md-body :deep(li) { margin: 0.2em 0; }
+.md-body :deep(code) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  padding: 0.12em 0.36em;
+  border-radius: 0.35rem;
+  background-color: color-mix(in srgb, var(--color-forge-700) 45%, transparent);
+  color: var(--color-forge-100);
+}
+.md-body :deep(pre) {
+  margin: 0.6em 0;
+  padding: 0.8em 1em;
+  border-radius: 0.6rem;
+  overflow-x: auto;
+  background-color: color-mix(in srgb, var(--color-forge-700) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-forge-700) 50%, transparent);
+}
+.md-body :deep(pre code) { padding: 0; background: none; }
+.md-body :deep(blockquote) {
+  margin: 0.6em 0;
+  padding-left: 0.9em;
+  border-left: 3px solid color-mix(in srgb, var(--color-ember) 50%, transparent);
+  color: var(--color-forge-300);
+}
+.md-body :deep(hr) {
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--color-forge-700) 60%, transparent);
+  margin: 1em 0;
+}
+.md-body :deep(table) { border-collapse: collapse; margin: 0.6em 0; width: 100%; }
+.md-body :deep(th),
+.md-body :deep(td) {
+  border: 1px solid color-mix(in srgb, var(--color-forge-700) 55%, transparent);
+  padding: 0.35em 0.6em;
+  text-align: left;
+}
+.md-body :deep(th) { background-color: color-mix(in srgb, var(--color-forge-700) 30%, transparent); }
+</style>
