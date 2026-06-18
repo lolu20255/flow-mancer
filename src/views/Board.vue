@@ -394,7 +394,7 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
             </button>
           </div>
           <div class="overflow-y-auto p-6">
-            <AgentList />
+            <AgentList variant="rows" />
           </div>
         </div>
       </div>
