@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import { useAgentStore } from '../stores/agents.js'
 
 const agentGlyphs = {
@@ -6,7 +7,19 @@ const agentGlyphs = {
   codex: '🧠',
 }
 
+const props = defineProps({
+  // 'grid' = responsive cards (home monitor); 'rows' = one full-width row per
+  // project (the board "Check agents" modal).
+  variant: { type: String, default: 'grid' },
+})
+
 const agentStore = useAgentStore()
+
+const containerClass = computed(() =>
+  props.variant === 'rows'
+    ? 'flex flex-col gap-2'
+    : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'
+)
 
 function agentGlyph(agent) {
   return agentGlyphs[agent] || '🤖'
@@ -27,7 +40,7 @@ function waitLabel(session) {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+  <div :class="containerClass">
     <div
       v-for="(group, i) in agentStore.groups"
       :key="group.key"
