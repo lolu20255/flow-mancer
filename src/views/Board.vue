@@ -3,17 +3,30 @@ import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBoardStore } from '../stores/board.js'
 import { useProjectStore } from '../stores/projects.js'
+import { useAgentStore } from '../stores/agents.js'
 import KanbanColumn from '../components/KanbanColumn.vue'
 import AddColumnButton from '../components/AddColumnButton.vue'
 import EditBoardModal from '../components/EditBoardModal.vue'
 import ManageLabelsModal from '../components/ManageLabelsModal.vue'
 import ShareBoardModal from '../components/ShareBoardModal.vue'
+import AgentList from '../components/AgentList.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
 
 const route = useRoute()
 const router = useRouter()
 const store = useBoardStore()
 const projectStore = useProjectStore()
+const agentStore = useAgentStore()
+
+// "Check agents" button: live presence of agents working across all repos.
+const showAgents = ref(false)
+const agentCount = computed(() => agentStore.workingCount + agentStore.waitingCount)
+const agentSummary = computed(() => {
+  const parts = []
+  if (agentStore.workingCount) parts.push(`${agentStore.workingCount} working`)
+  if (agentStore.waitingCount) parts.push(`${agentStore.waitingCount} waiting`)
+  return parts.length ? parts.join(' · ') : 'All idle'
+})
 
 const board = computed(() => store.getBoard(route.params.id))
 const showEditBoard = ref(false)
@@ -203,6 +216,31 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
             <span class="w-1 h-1 rounded-full bg-forge-600"></span>
             <span>{{board.columns.reduce((sum, col) => sum + col.cards.length, 0)}} cards</span>
           </div>
+          <button
+            v-if="agentStore.hasSessions"
+            @click="showAgents = true"
+            class="relative flex items-center gap-2 pl-2.5 pr-3 py-1.5 rounded-xl text-sm font-medium border transition-all duration-200 cursor-pointer focus-ring"
+            :class="agentCount > 0
+              ? 'bg-ember/10 border-ember/40 text-forge-100 hover:bg-ember/20'
+              : 'bg-forge-900 border-forge-700/50 text-forge-300 hover:border-forge-600/60'"
+            title="Check running agents"
+          >
+            <span v-if="agentCount > 0" class="relative flex h-2 w-2 shrink-0">
+              <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+            </span>
+            <svg v-else class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+            </svg>
+            <span>Agents</span>
+            <span
+              v-if="agentCount > 0"
+              class="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-ember/20 text-ember leading-none"
+            >
+              {{ agentCount }}
+            </span>
+          </button>
+
           <button @click="showShareBoard = true"
             class="btn-secondary text-sm py-1.5 focus-ring">
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -329,6 +367,38 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
 
     <!-- Share Board Modal -->
     <ShareBoardModal v-if="showShareBoard" :board="board" @close="showShareBoard = false" />
+
+    <!-- Agents Modal -->
+    <Teleport to="body">
+      <div v-if="showAgents" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" @click="showAgents = false"></div>
+        <div class="relative bg-forge-900 border border-forge-700/50 rounded-2xl shadow-soft-lg animate-scale-in w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-forge-800/60">
+            <div class="flex items-center gap-3">
+              <h2 class="font-display text-lg font-semibold text-forge-50">Agents</h2>
+              <span class="flex items-center gap-2 text-xs text-forge-400">
+                <span
+                  class="w-1.5 h-1.5 rounded-full"
+                  :class="agentStore.workingCount > 0 ? 'bg-emerald-400 animate-pulse' : agentStore.waitingCount > 0 ? 'wait-dot animate-pulse' : 'bg-forge-600'"
+                ></span>
+                {{ agentSummary }}
+              </span>
+            </div>
+            <button
+              @click="showAgents = false"
+              class="p-1.5 rounded-lg text-forge-400 hover:text-forge-100 hover:bg-forge-800 transition-all cursor-pointer focus-ring"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="overflow-y-auto p-6">
+            <AgentList />
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 
   <div v-else-if="isLoading" class="h-full flex flex-col items-center justify-center bg-forge-950 gap-4">
