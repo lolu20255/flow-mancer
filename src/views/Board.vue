@@ -185,33 +185,33 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
 <template>
   <div class="h-full flex flex-col bg-forge-950" v-if="board">
     <!-- Board Header -->
-    <header class="shrink-0 border-b border-forge-800/60 px-6 py-4">
-      <div class="flex items-center gap-4">
+    <header class="shrink-0 border-b border-forge-800/60 px-4 sm:px-6 py-3 sm:py-4">
+      <div class="flex items-center gap-2 sm:gap-4">
         <button @click="goBack"
-          class="p-2 rounded-xl text-forge-400 hover:text-forge-100 hover:bg-forge-800 transition-all duration-200 cursor-pointer focus-ring">
+          class="shrink-0 p-2 rounded-xl text-forge-400 hover:text-forge-100 hover:bg-forge-800 transition-all duration-200 cursor-pointer focus-ring">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
         <button @click="canEdit && (showEditBoard = true)"
-          :class="['flex items-center gap-2.5 group bg-transparent border-0 p-0', canEdit ? 'cursor-pointer' : 'cursor-default']">
-          <span class="text-2xl">{{ board.emoji }}</span>
-          <h1 class="font-display text-xl font-medium text-forge-50 group-hover:text-forge-50 transition-colors">
+          :class="['flex items-center gap-2 sm:gap-2.5 group bg-transparent border-0 p-0 min-w-0 flex-1', canEdit ? 'cursor-pointer' : 'cursor-default']">
+          <span class="text-xl sm:text-2xl shrink-0">{{ board.emoji }}</span>
+          <h1 class="font-display text-base sm:text-xl font-medium text-forge-50 truncate">
             {{ board.name }}
           </h1>
-          <svg v-if="canEdit" class="w-3.5 h-3.5 text-forge-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none"
+          <svg v-if="canEdit" class="hidden sm:block w-3.5 h-3.5 text-forge-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" fill="none"
             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round"
               d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
           </svg>
-          <span v-if="!canEdit && myRole" class="ml-2 px-1.5 py-0.5 rounded-md text-[10px] uppercase tracking-wider bg-forge-800 text-forge-400 border border-forge-700/40">
+          <span v-if="!canEdit && myRole" class="ml-1 px-1.5 py-0.5 rounded-md text-[10px] uppercase tracking-wider bg-forge-800 text-forge-400 border border-forge-700/40 shrink-0">
             {{ myRole }}
           </span>
         </button>
 
-        <div class="ml-auto flex items-center gap-4">
-          <div class="flex items-center gap-2 text-forge-500 text-xs">
+        <div class="shrink-0 flex items-center gap-1.5 sm:gap-3">
+          <div class="hidden md:flex items-center gap-2 text-forge-500 text-xs">
             <span>{{ board.columns.length }} columns</span>
             <span class="w-1 h-1 rounded-full bg-forge-600"></span>
             <span>{{board.columns.reduce((sum, col) => sum + col.cards.length, 0)}} cards</span>
@@ -219,7 +219,7 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
           <button
             v-if="agentStore.hasSessions"
             @click="showAgents = true"
-            class="relative flex items-center gap-2 pl-2.5 pr-3 py-1.5 rounded-xl text-sm font-medium border transition-all duration-200 cursor-pointer focus-ring"
+            class="relative flex items-center gap-1.5 sm:gap-2 px-2.5 sm:pr-3 py-2 sm:py-1.5 rounded-xl text-sm font-medium border transition-all duration-200 cursor-pointer focus-ring"
             :class="agentCount > 0
               ? 'bg-ember/10 border-ember/40 text-forge-100 hover:bg-ember/20'
               : 'bg-forge-900 border-forge-700/50 text-forge-300 hover:border-forge-600/60'"
@@ -229,10 +229,10 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
               <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
               <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
             </span>
-            <svg v-else class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg v-else class="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
             </svg>
-            <span>Agents</span>
+            <span class="hidden sm:inline">Agents</span>
             <span
               v-if="agentCount > 0"
               class="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-ember/20 text-ember leading-none"
@@ -242,12 +242,13 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
           </button>
 
           <button @click="showShareBoard = true"
-            class="btn-secondary text-sm py-1.5 focus-ring">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            class="btn-secondary text-sm focus-ring shrink-0"
+            :title="(board.members || []).length > 1 ? `Share · ${(board.members || []).length} members` : 'Share board'">
+            <svg class="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
-            <span>Share</span>
-            <span v-if="(board.members || []).length > 1" class="text-forge-500">· {{ (board.members || []).length }}</span>
+            <span class="hidden sm:inline">Share</span>
+            <span v-if="(board.members || []).length > 1" class="hidden sm:inline text-forge-500">· {{ (board.members || []).length }}</span>
           </button>
           <ThemeToggle />
         </div>
@@ -255,7 +256,7 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
     </header>
 
     <!-- Project Filter -->
-    <div v-if="boardProjects.length" class="shrink-0 px-8 pt-3 flex items-center gap-2 flex-wrap animate-fade-in">
+    <div v-if="boardProjects.length" class="shrink-0 px-4 sm:px-8 pt-3 flex items-center gap-2 flex-wrap animate-fade-in">
       <span class="section-label mr-1">Filter by Project</span>
 
       <!-- Dropdown trigger -->
@@ -315,7 +316,7 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
     </div>
 
     <!-- Label Filter -->
-    <div v-if="boardLabels.length" class="shrink-0 px-8 pt-2 flex items-center gap-2 flex-wrap animate-fade-in">
+    <div v-if="boardLabels.length" class="shrink-0 px-4 sm:px-8 pt-2 flex items-center gap-2 flex-wrap animate-fade-in">
       <span class="section-label mr-1">Filter by Label</span>
       <button v-for="label in boardLabels" :key="label" @click="toggleLabelFilter(label)"
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer border"
@@ -346,8 +347,8 @@ const isLoading = computed(() => store.loading || !graceElapsed.value)
     </div>
 
     <!-- Kanban Board -->
-    <main class="flex-1 overflow-x-auto overflow-y-hidden px-6 py-5">
-      <div class="flex gap-4 h-full items-start">
+    <main class="flex-1 overflow-x-auto overflow-y-hidden px-4 sm:px-6 py-4 sm:py-5">
+      <div class="flex gap-3 sm:gap-4 h-full items-start">
         <KanbanColumn v-for="(column, index) in board.columns" :key="column.id" :board-id="board.id" :column="column"
           :index="index" :filter-project-ids="filterProjectIds" :filter-labels="filterLabels" :drag-card="dragCard"
           :can-edit="canEdit"
